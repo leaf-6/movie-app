@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>个人中心 - 我的影视</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Segoe UI", "PingFang SC", sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 60px;
+            background: rgba(10, 10, 10, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #222;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+        }
+        .nav-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .nav-links a:hover {
+            color: #fff;
+        }
+        .btn-logout {
+            padding: 6px 20px;
+            border-radius: 20px;
+            border: 1px solid #ff6b6b;
+            background: transparent;
+            color: #ff6b6b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-logout:hover {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto 0;
+            padding: 0 20px 40px;
+        }
+
+        .profile-card {
+            background: #141414;
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 30px;
+        }
+        .profile-card .avatar {
+            font-size: 64px;
+            text-align: center;
+        }
+        .profile-card .name {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 8px 0 4px;
+        }
+        .profile-card .info {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #2a2a2a;
+            margin: 24px 0;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .stats .num {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        .stats .label {
+            color: #888;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #ddd;
+        }
+
+        .movie-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .movie-item {
+            background: #141414;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: 0.3s;
+            cursor: pointer;
+            border: 1px solid #1a1a1a;
+        }
+        .movie-item:hover {
+            transform: translateY(-4px);
+            border-color: #ffd700;
+        }
+        .movie-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #222;
+        }
+        .movie-item .info {
+            padding: 10px 12px;
+        }
+        .movie-item .info h4 {
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .movie-item .info .time {
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .empty-tip {
+            color: #666;
+            font-size: 14px;
+            padding: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            color: #444;
+            font-size: 13px;
+            border-top: 1px solid #1a1a1a;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 20px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .nav-links {
+                gap: 16px;
+            }
+            .profile-card {
+                padding: 24px;
+            }
+            .movie-list {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+            }
+            .movie-item img {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 导航 -->
+    <nav class="navbar">
+        <div class="logo">🎬 我的影视</div>
+        <div class="nav-links">
+            <a href="../index.html">首页</a>
+            <a href="#" style="color:#fff;">个人中心</a>
+        </div>
+        <button class="btn-logout" id="logoutBtn">退出登录</button>
+    </nav>
+
+    <!-- 个人中心 -->
+    <div class="container">
+        <!-- 用户信息 -->
+        <div class="profile-card">
+            <div class="avatar">👤</div>
+            <div class="name" id="displayName">加载中...</div>
+            <div class="info" id="displayInfo">欢迎回来</div>
+            <hr class="divider" />
+            <div class="stats">
+                <div>
+                    <div class="num" id="favCount">0</div>
+                    <div class="label">⭐ 收藏</div>
+                </div>
+                <div>
+                    <div class="num" id="historyCount">0</div>
+                    <div class="label">📺 观看记录</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收藏列表 -->
+        <div class="section-title">⭐ 我的收藏</div>
+        <div class="movie-list" id="favoriteList">
+            <div class="empty-tip">加载中...</div>
+        </div>
+
+        <!-- 观看历史 -->
+        <div class="section-title">📺 观看历史</div>
+        <div class="movie-list" id="historyList">
+            <div class="empty-tip">加载中...</div>
+        </div>
+    </div>
+
+    <div class="footer">© 2026 我的影视 · 大数据实训项目</div>
+
+    <script type="module">
+        import { AuthAPI, UserAPI } from '../js/api.js';
+
+        // ====== 路由守卫（用立即执行函数包裹，return 才合法） ======
+        (function init() {
+            if (!AuthAPI.isLoggedIn()) {
+                window.location.href = '../auth/login.html';
+                return;
+            }
+
+            // 继续执行主逻辑
+            main();
+        })();
+
+        // ====== 主逻辑 ======
+        async function main() {
+            const displayName = document.getElementById('displayName');
+            const displayInfo = document.getElementById('displayInfo');
+            const favCount = document.getElementById('favCount');
+            const historyCount = document.getElementById('historyCount');
+            const favoriteList = document.getElementById('favoriteList');
+            const historyList = document.getElementById('historyList');
+
+            // 渲染影片列表
+            function renderMovieList(container, movies, emptyText = '暂无内容') {
+                if (!movies || movies.length === 0) {
+                    container.innerHTML = `<div class="empty-tip">${emptyText}</div>`;
+                    return;
+                }
+
+                container.innerHTML = movies.map((m) => `
+                    <div class="movie-item" onclick="location.href='../player.html?id=${m.id}'">
+                        <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22280%22%3E%3Crect fill=%22%23222%22 width=%22200%22 height=%22280%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23666%22 font-size=%2220%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                        <div class="info">
+                            <h4>${m.title}</h4>
+                            <div class="time">⭐ ${m.rating || 'N/A'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 加载用户数据
+            try {
+                const username = localStorage.getItem('movie_username') || '用户';
+                displayName.textContent = username;
+                displayInfo.textContent = '已登录 · 欢迎回来 🎉';
+
+                // 获取收藏
+                const favResult = await UserAPI.getFavorites();
+                if (favResult.success) {
+                    favCount.textContent = favResult.data.length;
+                    renderMovieList(favoriteList, favResult.data, '还没有收藏的影片，快去发现好片吧 🎬');
+                } else {
+                    favoriteList.innerHTML = '<div class="empty-tip">加载失败，请刷新重试</div>';
+                }
+
+                // 获取历史
+                const histResult = await UserAPI.getHistory();
+                if (histResult.success) {
+                    historyCount.textContent = histResult.data.length;
+                    renderMovieList(historyList, histResult.data, '还没有观看记录，去看一部电影吧 🍿');
+                } else {
+                    historyList.innerHTML = '<div class="empty-tip">加载失败，请刷新重试</div>';
+                }
+
+            } catch (error) {
+                console.error('加载用户数据失败:', error);
+                favoriteList.innerHTML = '<div class="empty-tip">加载失败，请检查网络</div>';
+                historyList.innerHTML = '<div class="empty-tip">加载失败，请检查网络</div>';
+            }
+
+            // 退出登录
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('确定要退出登录吗？')) {
+                    AuthAPI.logout();
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

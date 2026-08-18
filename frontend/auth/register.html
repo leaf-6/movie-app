@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>注册</title>
+    <link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="logo"> 我的影视</div>
+        <div class="subtitle">创建你的账号</div>
+
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="successMsg" class="success-msg"></div>
+
+        <form id="registerForm" autocomplete="off">
+            <label for="username">用户名</label>
+            <input type="text" id="username" placeholder="请设置用户名（3-20位）" required />
+
+            <label for="password">密码</label>
+            <input type="password" id="password" placeholder="请设置密码（至少6位）" required />
+
+            <label for="confirmPwd">确认密码</label>
+            <input type="password" id="confirmPwd" placeholder="再次输入密码" required />
+
+            <button type="submit" class="btn-primary">注 册</button>
+        </form>
+
+        <div class="switch-link">
+            已有账号？ <a href="login.html">去登录</a>
+        </div>
+    </div>
+
+    <script src="../js/storage.js"></script>
+    <script src="../js/auth.js"></script>
+    <script type="module">
+        import { AuthAPI } from '../js/api.js';
+    
+        document.addEventListener('DOMContentLoaded', function() {
+            if (AuthAPI.isLoggedIn()) {
+                window.location.href = '../index.html';
+                return;
+            }
+    
+            const registerForm = document.getElementById('registerForm');
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+    
+            registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+    
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const confirmPwd = document.getElementById('confirmPwd').value.trim();
+    
+                errorMsg.classList.remove('show');
+                successMsg.classList.remove('show');
+    
+                if (password !== confirmPwd) {
+                    errorMsg.textContent = '两次输入的密码不一致';
+                    errorMsg.classList.add('show');
+                    return;
+                }
+    
+                const result = await AuthAPI.register(username, password);
+    
+                if (result.success) {
+                    successMsg.textContent = result.message;
+                    successMsg.classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
+                } else {
+                    errorMsg.textContent = result.message;
+                    errorMsg.classList.add('show');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

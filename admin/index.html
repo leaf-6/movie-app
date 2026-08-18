@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>后台管理 - 我的影视</title>
+    <style>
+        /* ====== 样式保持不变（和你原有的一样） ====== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+
+        /* ====== 登录页 ====== */
+        .login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0a0a0a;
+        }
+        .login-box {
+            background: #141414;
+            padding: 48px 40px 40px;
+            border-radius: 20px;
+            width: 400px;
+            max-width: 92%;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .login-box .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .login-box .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+        .login-box label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #ccc;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid #2a2a2a;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+            margin-bottom: 18px;
+        }
+        .login-box input:focus {
+            border-color: #ffd700;
+            box-shadow: 0 0 0 3px rgba(255,215,0,0.1);
+        }
+        .login-box .btn-primary {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .login-box .btn-primary:hover {
+            transform: scale(1.01);
+            box-shadow: 0 4px 20px rgba(255,215,0,0.3);
+        }
+        .login-box .error-msg {
+            background: rgba(255,0,0,0.12);
+            border: 1px solid rgba(255,0,0,0.25);
+            color: #ff6b6b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .login-box .error-msg.show { display: block; }
+
+        /* ====== 管理主界面 ====== */
+        .admin-layout {
+            display: none;
+            min-height: 100vh;
+        }
+        .admin-layout.active { display: block; }
+
+        /* 顶部导航 */
+        .admin-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 40px;
+            background: rgba(10,10,10,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .admin-nav .logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .admin-nav .nav-links {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .admin-nav .nav-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .admin-nav .nav-links a:hover,
+        .admin-nav .nav-links a.active {
+            color: #fff;
+            background: rgba(255,215,0,0.08);
+        }
+        .admin-nav .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #888;
+            font-size: 14px;
+        }
+        .admin-nav .user-info .logout-btn {
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: 1px solid #ff6b6b;
+            background: transparent;
+            color: #ff6b6b;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+        .admin-nav .user-info .logout-btn:hover {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        /* 内容区 */
+        .admin-content {
+            padding: 30px 40px 40px;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #141414;
+            border-radius: 14px;
+            padding: 20px 24px;
+            border: 1px solid #1a1a1a;
+            transition: 0.3s;
+        }
+        .stat-card:hover {
+            border-color: #2a2a2a;
+        }
+        .stat-card .num {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        .stat-card .label {
+            color: #666;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* 表格 */
+        .table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .table-toolbar .search-input {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #2a2a2a;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            width: 240px;
+            transition: 0.3s;
+        }
+        .table-toolbar .search-input:focus {
+            border-color: #ffd700;
+        }
+        .table-toolbar .btn-add {
+            padding: 8px 22px;
+            border-radius: 20px;
+            border: none;
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .table-toolbar .btn-add:hover {
+            transform: scale(1.04);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            background: #141414;
+            border-radius: 14px;
+            border: 1px solid #1a1a1a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 700px;
+        }
+        th {
+            text-align: left;
+            padding: 14px 16px;
+            color: #666;
+            font-weight: 600;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 13px;
+        }
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #1a1a1a;
+            color: #ddd;
+        }
+        td .poster-thumb {
+            width: 50px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #1a1a1a;
+        }
+        td .actions {
+            display: flex;
+            gap: 8px;
+        }
+        td .actions button {
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        td .actions .btn-edit {
+            background: rgba(255,215,0,0.12);
+            color: #ffd700;
+        }
+        td .actions .btn-edit:hover {
+            background: rgba(255,215,0,0.2);
+        }
+        td .actions .btn-del {
+            background: rgba(255,0,0,0.1);
+            color: #ff6b6b;
+        }
+        td .actions .btn-del:hover {
+            background: rgba(255,0,0,0.2);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px 0 10px;
+        }
+        .pagination button {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid #1a1a1a;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+        .pagination button:hover,
+        .pagination button.active {
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+        .pagination button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* 空状态 */
+        .empty-row td {
+            text-align: center;
+            color: #555;
+            padding: 40px 0;
+        }
+
+        /* ====== 弹窗 ====== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #141414;
+            border-radius: 20px;
+            padding: 32px 36px;
+            width: 520px;
+            max-width: 92%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+        }
+        .modal-box h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .modal-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .modal-box input,
+        .modal-box textarea,
+        .modal-box select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 14px;
+            font-family: inherit;
+        }
+        .modal-box textarea { resize: vertical; min-height: 80px; }
+        .modal-box input:focus,
+        .modal-box textarea:focus {
+            border-color: #ffd700;
+        }
+        .modal-box .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+        .modal-box .btn-row button {
+            padding: 10px 28px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .modal-box .btn-row .btn-cancel {
+            background: #1a1a1a;
+            color: #888;
+        }
+        .modal-box .btn-row .btn-cancel:hover {
+            background: #2a2a2a;
+        }
+        .modal-box .btn-row .btn-submit {
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+        }
+        .modal-box .btn-row .btn-submit:hover {
+            transform: scale(1.02);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .admin-nav { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+            .admin-nav .nav-links { gap: 8px; }
+            .admin-nav .nav-links a { font-size: 12px; padding: 4px 10px; }
+            .admin-content { padding: 16px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .num { font-size: 24px; }
+            .table-toolbar { flex-direction: column; align-items: stretch; }
+            .table-toolbar .search-input { width: 100%; }
+            .modal-box { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 登录页 ====== -->
+    <div class="login-page" id="loginPage">
+        <div class="login-box">
+            <div class="logo">🎬 后台管理</div>
+            <div class="subtitle">管理员登录</div>
+            <div class="error-msg" id="loginError">用户名或密码错误</div>
+            <form id="loginForm">
+                <label>用户名</label>
+                <input type="text" id="adminUser" placeholder="admin" value="admin" />
+                <label>密码</label>
+                <input type="password" id="adminPass" placeholder="请输入密码" value="admin123" />
+                <button type="submit" class="btn-primary">登 录</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====== 管理主界面 ====== -->
+    <div class="admin-layout" id="adminLayout">
+        <!-- 导航 -->
+        <nav class="admin-nav">
+            <span class="logo">🎬 后台管理</span>
+            <div class="nav-links">
+                <a class="active" data-tab="dashboard"> 总览</a>
+                <a data-tab="movies">🎬 影片管理</a>
+                <a data-tab="users">👥 用户管理</a>
+                <a data-tab="recommend"> 推荐统计</a>
+            </div>
+            <div class="user-info">
+                <span id="adminName">admin</span>
+                <button class="logout-btn" id="logoutBtn">退出</button>
+            </div>
+        </nav>
+
+        <!-- 内容 -->
+        <div class="admin-content">
+
+            <!-- ====== 总览 ====== -->
+            <div id="tabDashboard">
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card"><div class="num" id="statMovies">-</div><div class="label">🎬 影片总数</div></div>
+                    <div class="stat-card"><div class="num" id="statUsers">-</div><div class="label">👥 用户总数</div></div>
+                    <div class="stat-card"><div class="num" id="statHistory">-</div><div class="label"> 播放总数</div></div>
+                    <div class="stat-card"><div class="num" id="statFavs">-</div><div class="label">⭐ 收藏总数</div></div>
+                    <div class="stat-card"><div class="num" id="statWeek">-</div><div class="label"> 本周播放</div></div>
+                </div>
+                <div style="color:#666;font-size:14px;padding:20px 0;text-align:center;border-top:1px solid #1a1a1a;">
+                    💡 欢迎回来！这里是你的影视数据总览。
+                </div>
+            </div>
+
+            <!-- ====== 影片管理 ====== -->
+            <div id="tabMovies" style="display:none;">
+                <div class="table-toolbar">
+                    <input class="search-input" id="movieSearch" placeholder="搜索影片名称..." />
+                    <button class="btn-add" id="addMovieBtn">+ 添加影片</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>海报</th>
+                                <th>名称</th>
+                                <th>年份</th>
+                                <th>评分</th>
+                                <th>播放</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movieTableBody">
+                            <tr><td colspan="7" style="text-align:center;color:#555;padding:40px 0;">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="moviePagination"></div>
+            </div>
+
+            <!-- ====== 用户管理 ====== -->
+            <div id="tabUsers" style="display:none;">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>注册时间</th>
+                                <th>观看数</th>
+                                <th>收藏数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <tr><td colspan="5" style="text-align:center;color:#555;padding:40px 0;">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ====== 推荐统计（新增） ====== -->
+            <div id="tabRecommend" style="display:none;">
+                <div class="stats-grid" id="recStatsGrid">
+                    <div class="stat-card"><div class="num" id="recTotalUsers">-</div><div class="label">👥 总用户</div></div>
+                    <div class="stat-card"><div class="num" id="recActiveUsers">-</div><div class="label"> 活跃用户</div></div>
+                    <div class="stat-card"><div class="num" id="recUsersWithRecs">-</div><div class="label"> 有推荐用户</div></div>
+                    <div class="stat-card"><div class="num" id="recTotalRecs">-</div><div class="label"> 总推荐数</div></div>
+                    <div class="stat-card"><div class="num" id="recCoverage">-</div><div class="label">📈 推荐覆盖率</div></div>
+                </div>
+                <div style="margin-top:20px;">
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr><th>用户</th><th>推荐数</th></tr>
+                            </thead>
+                            <tbody id="recUserTableBody">
+                                <tr><td colspan="2" style="text-align:center;color:#555;padding:40px 0;">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /admin-content -->
+    </div>
+    <!-- /admin-layout -->
+
+    <!-- ====== 弹窗 ====== -->
+    <div class="modal-overlay" id="movieModal">
+        <div class="modal-box">
+            <h2 id="modalTitle">添加影片</h2>
+            <form id="movieForm">
+                <input type="hidden" id="editMovieId" />
+                <label>影片名称 *</label>
+                <input type="text" id="mTitle" placeholder="请输入影片名称" required />
+                <label>年份</label>
+                <input type="text" id="mYear" placeholder="如: 2024" />
+                <label>类型</label>
+                <input type="text" id="mGenre" placeholder="如: 科幻 / 冒险" />
+                <label>评分</label>
+                <input type="number" id="mRating" placeholder="0-10" step="0.1" />
+                <label>简介</label>
+                <textarea id="mDesc" placeholder="请输入影片简介"></textarea>
+                <label>海报链接</label>
+                <input type="text" id="mPoster" placeholder="https://xxx.jpg" />
+                <label>视频链接</label>
+                <input type="text" id="mVideo" placeholder="https://xxx.mp4" />
+                <div class="btn-row">
+                    <button type="button" class="btn-cancel" id="modalCancel">取消</button>
+                    <button type="submit" class="btn-submit">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ====== 工具函数 ======
+        const API_BASE = 'http://localhost:5000/api';
+
+        function getToken() { return localStorage.getItem('admin_token'); }
+        function setToken(t) { localStorage.setItem('admin_token', t); }
+        function clearToken() { localStorage.removeItem('admin_token'); }
+
+        async function adminRequest(endpoint, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            };
+            const token = getToken();
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const resp = await fetch(`${API_BASE}/admin${endpoint}`, {
+                ...options,
+                headers
+            });
+            const data = await resp.json();
+            if (resp.status === 401) {
+                clearToken();
+                location.reload();
+            }
+            return data;
+        }
+
+        // ====== 加载推荐统计 ======
+        async function loadRecommendStats() {
+            try {
+                const data = await adminRequest('/recommend/stats');
+                if (data.success) {
+                    document.getElementById('recTotalUsers').textContent = data.data.total_users;
+                    document.getElementById('recActiveUsers').textContent = data.data.active_users;
+                    document.getElementById('recUsersWithRecs').textContent = data.data.users_with_recs;
+                    document.getElementById('recTotalRecs').textContent = data.data.total_recs;
+                    document.getElementById('recCoverage').textContent = data.data.coverage + '%';
+
+                    const tbody = document.getElementById('recUserTableBody');
+                    if (data.data.user_recs && data.data.user_recs.length > 0) {
+                        tbody.innerHTML = data.data.user_recs.map(u => `
+                            <tr>
+                                <td><strong>${u.username}</strong></td>
+                                <td>${u.rec_count}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;color:#555;padding:20px 0;">暂无数据</td></tr>`;
+                    }
+                }
+            } catch (e) {
+                console.error('加载推荐统计失败:', e);
+            }
+        }
+
+        // ====== Tab 切换（包含 recommend） ======
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+
+                const tab = this.dataset.tab;
+                document.getElementById('tabDashboard').style.display = tab === 'dashboard' ? 'block' : 'none';
+                document.getElementById('tabMovies').style.display = tab === 'movies' ? 'block' : 'none';
+                document.getElementById('tabUsers').style.display = tab === 'users' ? 'block' : 'none';
+                document.getElementById('tabRecommend').style.display = tab === 'recommend' ? 'block' : 'none';
+
+                if (tab === 'dashboard') loadDashboard();
+                if (tab === 'movies') loadMovies();
+                if (tab === 'users') loadUsers();
+                if (tab === 'recommend') loadRecommendStats();
+            });
+        });
+
+        // ====== 登录 ======
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUser').value.trim();
+            const password = document.getElementById('adminPass').value.trim();
+            const errorEl = document.getElementById('loginError');
+
+            if (!username || !password) {
+                errorEl.textContent = '请填写用户名和密码';
+                errorEl.classList.add('show');
+                return;
+            }
+
+            try {
+                const resp = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    setToken(data.data.token);
+                    localStorage.setItem('admin_name', data.data.username);
+                    showAdminPanel();
+                } else {
+                    errorEl.textContent = data.message || '登录失败';
+                    errorEl.classList.add('show');
+                }
+            } catch (e) {
+                errorEl.textContent = '网络错误，请检查后端服务';
+                errorEl.classList.add('show');
+            }
+        });
+
+        // ====== 显示管理面板 ======
+        function showAdminPanel() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('adminLayout').classList.add('active');
+            document.getElementById('adminName').textContent = localStorage.getItem('admin_name') || 'admin';
+            loadDashboard();
+            loadMovies();
+            loadUsers();
+            // 默认加载推荐统计（但 tab 未激活，不显示）
+        }
+
+        // ====== 检查登录状态 ======
+        if (getToken()) {
+            showAdminPanel();
+        }
+
+        // ====== 退出 ======
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('确定要退出吗？')) {
+                clearToken();
+                localStorage.removeItem('admin_name');
+                location.reload();
+            }
+        });
+
+        // ====== 加载统计 ======
+        async function loadDashboard() {
+            try {
+                const data = await adminRequest('/stats');
+                if (data.success) {
+                    document.getElementById('statMovies').textContent = data.data.total_movies;
+                    document.getElementById('statUsers').textContent = data.data.total_users;
+                    document.getElementById('statHistory').textContent = data.data.total_history;
+                    document.getElementById('statFavs').textContent = data.data.total_favorites;
+                    document.getElementById('statWeek').textContent = data.data.week_plays;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // ====== 加载影片列表 ======
+        let moviePage = 1;
+        let movieTotal = 0;
+
+        async function loadMovies(page = 1) {
+            moviePage = page;
+            const keyword = document.getElementById('movieSearch').value.trim();
+
+            try {
+                const data = await adminRequest(`/movies?page=${page}&limit=20&keyword=${encodeURIComponent(keyword)}`);
+                if (data.success) {
+                    movieTotal = data.data.total;
+                    const movies = data.data.movies || [];
+                    const tbody = document.getElementById('movieTableBody');
+
+                    if (movies.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#555;padding:40px 0;">暂无影片</td></tr>`;
+                    } else {
+                        tbody.innerHTML = movies.map(m => `
+                            <tr>
+                                <td>${m.id}</td>
+                                <td><img class="poster-thumb" src="${m.poster || 'https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2897488431.jpg'}" onerror="this.style.display='none'" /></td>
+                                <td><strong>${m.title}</strong></td>
+                                <td>${m.year}</td>
+                                <td>⭐ ${m.rating}</td>
+                                <td>${m.total_plays || 0}</td>
+                                <td>
+                                    <div class="actions">
+                                        <button class="btn-edit" onclick="editMovie(${m.id})">编辑</button>
+                                        <button class="btn-del" onclick="deleteMovie(${m.id})">删除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+
+                    renderPagination();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // ====== 分页 ======
+        function renderPagination() {
+            const container = document.getElementById('moviePagination');
+            const totalPages = Math.ceil(movieTotal / 20);
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+            let html = `<button onclick="loadMovies(${moviePage - 1})" ${moviePage <= 1 ? 'disabled' : ''}>‹</button>`;
+            for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+                html += `<button onclick="loadMovies(${i})" class="${i === moviePage ? 'active' : ''}">${i}</button>`;
+            }
+            if (totalPages > 10) {
+                html += `<span style="color:#444;">...</span>`;
+                html += `<button onclick="loadMovies(${totalPages})">${totalPages}</button>`;
+            }
+            html += `<button onclick="loadMovies(${moviePage + 1})" ${moviePage >= totalPages ? 'disabled' : ''}>›</button>`;
+            container.innerHTML = html;
+        }
+
+        // ====== 搜索 ======
+        document.getElementById('movieSearch').addEventListener('input', function() {
+            clearTimeout(this._timer);
+            this._timer = setTimeout(() => loadMovies(1), 400);
+        });
+
+        // ====== 添加/编辑影片 ======
+        let isEditing = false;
+
+        document.getElementById('addMovieBtn').addEventListener('click', function() {
+            isEditing = false;
+            document.getElementById('modalTitle').textContent = '添加影片';
+            document.getElementById('movieForm').reset();
+            document.getElementById('editMovieId').value = '';
+            document.getElementById('movieModal').classList.add('active');
+        });
+
+        window.editMovie = async function(id) {
+            isEditing = true;
+            document.getElementById('modalTitle').textContent = '编辑影片';
+            document.getElementById('editMovieId').value = id;
+            document.getElementById('movieModal').classList.add('active');
+
+            try {
+                const resp = await fetch(`${API_BASE}/movies/${id}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    const m = data.data;
+                    document.getElementById('mTitle').value = m.title || '';
+                    document.getElementById('mYear').value = m.year || '';
+                    document.getElementById('mGenre').value = m.genre || '';
+                    document.getElementById('mRating').value = m.rating || '';
+                    document.getElementById('mDesc').value = m.description || '';
+                    document.getElementById('mPoster').value = m.poster || '';
+                    document.getElementById('mVideo').value = m.video_url || '';
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        document.getElementById('modalCancel').addEventListener('click', function() {
+            document.getElementById('movieModal').classList.remove('active');
+        });
+
+        document.getElementById('movieForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editMovieId').value;
+            const data = {
+                title: document.getElementById('mTitle').value.trim(),
+                year: document.getElementById('mYear').value.trim(),
+                genre: document.getElementById('mGenre').value.trim(),
+                rating: parseFloat(document.getElementById('mRating').value) || 0,
+                description: document.getElementById('mDesc').value.trim(),
+                poster: document.getElementById('mPoster').value.trim(),
+                video_url: document.getElementById('mVideo').value.trim() || 'https://www.w3schools.com/html/mov_bbb.mp4'
+            };
+
+            if (!data.title) {
+                alert('请填写影片名称');
+                return;
+            }
+
+            try {
+                const endpoint = id ? `/movies/${id}` : '/movies';
+                const method = id ? 'PUT' : 'POST';
+                const result = await adminRequest(endpoint, {
+                    method,
+                    body: JSON.stringify(data)
+                });
+
+                if (result.success) {
+                    document.getElementById('movieModal').classList.remove('active');
+                    loadMovies(moviePage);
+                    loadDashboard();
+                } else {
+                    alert(result.message || '操作失败');
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        });
+
+        // ====== 删除影片 ======
+        window.deleteMovie = async function(id) {
+            if (!confirm('确定要删除这部影片吗？')) return;
+
+            try {
+                const result = await adminRequest(`/movies/${id}`, { method: 'DELETE' });
+                if (result.success) {
+                    loadMovies(moviePage);
+                    loadDashboard();
+                } else {
+                    alert(result.message || '删除失败');
+                }
+            } catch (e) {
+                alert('网络错误，请重试');
+            }
+        };
+
+        // ====== 加载用户列表 ======
+        async function loadUsers() {
+            try {
+                const data = await adminRequest('/users');
+                const tbody = document.getElementById('userTableBody');
+
+                if (data.success && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map(u => `
+                        <tr>
+                            <td>${u.id}</td>
+                            <td><strong>${u.username}</strong></td>
+                            <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                            <td>${u.total_watch || 0}</td>
+                            <td>${u.total_fav || 0}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#555;padding:40px 0;">暂无用户</td></tr>`;
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // ====== 点击弹窗外部关闭 ======
+        document.getElementById('movieModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+
+        // ====== 快捷键：ESC关闭弹窗 ======
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('movieModal').classList.remove('active');
+            }
+        });
+    </script>
+
+</body>
+</html>

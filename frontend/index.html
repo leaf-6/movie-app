@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎬 我的影视</title>
+    <style>
+        /* ====== 全局重置 ====== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        a {
+            text-decoration: none;
+            color: #fff;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141414;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffd700;
+            border-radius: 10px;
+        }
+
+        /* ====== 顶部导航 ====== */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 60px;
+            background: rgba(10, 10, 10, 0.88);
+            backdrop-filter: blur(20px) saturate(1.8);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700 0%, #ff6b00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .logo span {
+            font-weight: 300;
+            color: #666;
+            -webkit-text-fill-color: #666;
+            font-size: 14px;
+            margin-left: 6px;
+        }
+        .nav-links {
+            display: flex;
+            gap: 36px;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .nav-links a {
+            color: #aaa;
+            transition: 0.3s;
+            position: relative;
+            padding: 4px 0;
+            cursor: pointer;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: #ffd700;
+            transition: 0.3s;
+        }
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #fff;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .search-box {
+            padding: 8px 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            width: 180px;
+            transition: 0.4s;
+        }
+        .search-box::placeholder {
+            color: #555;
+        }
+        .search-box:focus {
+            border-color: #ffd700;
+            width: 240px;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+        }
+
+        .btn-login {
+            padding: 8px 22px;
+            border-radius: 24px;
+            border: none;
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-login:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+        }
+
+        /* ====== 轮播横幅 ====== */
+        .banner-wrapper {
+            margin: 16px 60px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            height: 380px;
+        }
+        .banner-slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 60px;
+            cursor: pointer;
+            border-radius: 16px;
+        }
+        .banner-slide.active {
+            opacity: 1;
+        }
+        .banner-slide:nth-child(1) {
+            background: linear-gradient(135deg, #1a0a2e 0%, #0d1b2a 100%);
+        }
+        .banner-slide:nth-child(2) {
+            background: linear-gradient(135deg, #1a1a0a 0%, #2a1a0d 100%);
+        }
+        .banner-slide:nth-child(3) {
+            background: linear-gradient(135deg, #0a1a2e 0%, #0d0d2a 100%);
+        }
+        .banner-content h1 {
+            font-size: 44px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .banner-content p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            max-width: 480px;
+            line-height: 1.8;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        }
+        .banner-tag {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+            font-size: 13px;
+            font-weight: 700;
+            margin-top: 12px;
+        }
+        .banner-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        .banner-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .banner-dots span.active {
+            background: #ffd700;
+            width: 28px;
+            border-radius: 6px;
+        }
+        .banner-dots span:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* ====== 影片区域 ====== */
+        .section {
+            padding: 30px 60px 10px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .section-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section-header h2 .badge {
+            font-size: 12px;
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-weight: 400;
+        }
+        .section-header .more {
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 4px 14px;
+            border-radius: 16px;
+            border: 1px solid transparent;
+        }
+        .section-header .more:hover {
+            color: #ffd700;
+            border-color: rgba(255, 215, 0, 0.2);
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 22px;
+        }
+
+        .movie-card {
+            background: #141414;
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .movie-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.12);
+            border-color: rgba(255, 215, 0, 0.15);
+        }
+        .movie-card .poster-wrap {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 2/3;
+        }
+        .movie-card .poster-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+        .movie-card:hover .poster-wrap img {
+            transform: scale(1.05);
+        }
+        .movie-card .poster-wrap .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 215, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #000;
+            transition: 0.3s;
+            opacity: 0;
+        }
+        .movie-card:hover .poster-wrap .play-icon {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .movie-card .poster-wrap .rating-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .movie-card .info {
+            padding: 14px 16px 16px;
+        }
+        .movie-card .info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .movie-card .info .meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* ====== 加载更多 ====== */
+        #loadMoreContainer {
+            text-align: center;
+            padding: 20px 60px 40px;
+        }
+        #loadMoreStatus {
+            color: #555;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        /* ====== 页脚 ====== */
+        .footer {
+            text-align: center;
+            padding: 20px 0 24px;
+            color: #333;
+            font-size: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .footer a {
+            color: #555;
+            transition: 0.3s;
+        }
+        .footer a:hover {
+            color: #ffd700;
+        }
+
+        /* ====== 响应式 ====== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .nav-links {
+                gap: 18px;
+                font-size: 14px;
+            }
+            .search-box {
+                width: 100px;
+            }
+            .search-box:focus {
+                width: 140px;
+            }
+            .banner-wrapper {
+                margin: 12px 16px 0;
+                height: 200px;
+            }
+            .banner-slide {
+                padding: 0 24px;
+            }
+            .banner-content h1 {
+                font-size: 22px;
+            }
+            .banner-content p {
+                font-size: 13px;
+                max-width: 100%;
+            }
+            .section {
+                padding: 20px 16px 10px;
+            }
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 14px;
+            }
+            #loadMoreContainer {
+                padding: 16px 16px 30px;
+            }
+        }
+        /* ====== 移动端全面适配 ====== */
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 10px 12px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .logo {
+                font-size: 18px;
+            }
+            .logo span { display: none; }
+            .nav-links {
+                gap: 10px;
+                font-size: 12px;
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                padding-top: 4px;
+                border-top: 1px solid rgba(255,255,255,0.04);
+            }
+            .nav-links a { padding: 4px 8px; }
+            .nav-right {
+                flex: 1;
+                justify-content: flex-end;
+                gap: 8px;
+            }
+            .search-box {
+                width: 80px;
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+            .search-box:focus { width: 120px; }
+            .banner-wrapper {
+                margin: 8px 8px 0;
+                height: 150px;
+                border-radius: 10px;
+            }
+            .banner-slide { padding: 0 16px; }
+            .banner-content h1 { font-size: 18px; }
+            .banner-content p {
+                font-size: 11px;
+                max-width: 100%;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .banner-tag { font-size: 10px; padding: 2px 10px; }
+            .banner-dots { bottom: 10px; gap: 6px; }
+            .banner-dots span { width: 6px; height: 6px; }
+            .banner-dots span.active { width: 16px; }
+
+            .section { padding: 12px 10px 6px; }
+            .section-header h2 { font-size: 16px; }
+            .section-header .badge { font-size: 10px; padding: 1px 8px; }
+            .section-header .more { font-size: 11px; padding: 2px 10px; }
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 10px;
+            }
+            .movie-card { border-radius: 8px; }
+            .movie-card .poster-wrap { aspect-ratio: 2/3; }
+            .movie-card .poster-wrap .rating-badge {
+                font-size: 10px;
+                padding: 2px 8px;
+                top: 4px;
+                right: 4px;
+            }
+            .movie-card .poster-wrap .play-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            .movie-card .info { padding: 8px 10px 10px; }
+            .movie-card .info h3 { font-size: 12px; }
+            .movie-card .info .meta { font-size: 10px; }
+
+            #loadMoreContainer { padding: 10px 10px 20px; }
+            #loadMoreStatus { font-size: 12px; }
+            .footer { font-size: 10px; padding: 12px 0 16px; }
+        }
+
+        /* ====== 小屏手机（< 360px） ====== */
+        @media (max-width: 360px) {
+            .nav-links { gap: 6px; font-size: 11px; }
+            .search-box { width: 60px; font-size: 11px; padding: 4px 10px; }
+            .movie-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+            .banner-wrapper { height: 120px; }
+            .banner-content h1 { font-size: 15px; }
+        }
+        
+        /* ====== 骨架屏 ====== */
+        .skeleton {
+            background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 导航栏 ====== -->
+    <nav class="navbar">
+        <div class="logo" onclick="location.href='index.html'">🎬 我的影视 </div>
+        <div class="nav-links">
+            <a href="index.html" class="active">首页</a>
+            <!-- 改为 -->
+            <a href="filter.html?type=hot" id="hotLink">热播榜</a>
+            <a href="filter.html?type=all" id="categoryLink">分类</a>
+            <a href="javascript:void(0)" id="favoritesLink">我的收藏</a>
+        </div>
+        <div class="nav-right" id="navRight">
+            <input class="search-box" id="homeSearchInput" placeholder="搜索影片..." />
+            <div id="authArea"></div>
+        </div>
+    </nav>
+
+    <!-- ====== 轮播横幅 ====== -->
+    <div class="banner-wrapper" id="bannerWrapper">
+        <div class="banner-slide active" data-index="0" onclick="location.href='player.html?id=1'">
+            <div class="banner-content">
+                <span class="banner-tag">🔥 本周热播 No.1</span>
+                <h1>流浪地球3</h1>
+                <p>太阳即将毁灭，人类启动流浪地球计划，踏上寻找新家园的漫漫征途...</p>
+            </div>
+        </div>
+        <div class="banner-slide" data-index="1" onclick="location.href='player.html?id=4'">
+            <div class="banner-content">
+                <span class="banner-tag">⭐ 高分推荐</span>
+                <h1>星际穿越</h1>
+                <p>近未来地球面临灭绝危机，一群宇航员穿越虫洞寻找人类新家园...</p>
+            </div>
+        </div>
+        <div class="banner-slide" data-index="2" onclick="location.href='player.html?id=8'">
+            <div class="banner-content">
+                <span class="banner-tag">🎬 经典永不过时</span>
+                <h1>盗梦空间</h1>
+                <p>道姆·柯布是一位能潜入他人梦境的盗贼，为了回家必须完成最后一次任务...</p>
+            </div>
+        </div>
+        <div class="banner-dots" id="bannerDots">
+            <span class="active" data-index="0"></span>
+            <span data-index="1"></span>
+            <span data-index="2"></span>
+        </div>
+    </div>
+
+    <!-- ====== 猜你喜欢 ====== -->
+    <section class="section">
+        <div class="section-header">
+            <h2> 猜你喜欢 <span class="badge">个性化推荐</span></h2>
+            <span class="more" onclick="location.href='filter.html?type=all'">更多 →</span>
+        </div>
+        <div class="movie-grid" id="recommendGrid"></div>
+    </section>
+
+    <!-- ====== 热播榜单 ====== -->
+    <section class="section">
+        <div class="section-header">
+            <h2> 实时热播榜 <span class="badge">🔥 热门</span></h2>
+            <span class="more" onclick="location.href='filter.html?type=hot'">更多 →</span>
+        </div>
+        <div class="movie-grid" id="hotGrid"></div>
+    </section>
+
+    <!-- ====== 科幻精选 ====== -->
+    <section class="section">
+        <div class="section-header">
+            <h2>科幻精选 <span class="badge"> 类型</span></h2>
+            <span class="more" onclick="location.href='filter.html?type=all'">更多 →</span>
+        </div>
+        <div class="movie-grid" id="scifiGrid"></div>
+    </section>
+
+    <!-- ====== 加载更多 ====== -->
+    <div id="loadMoreContainer">
+        <div id="loadMoreStatus">向下滚动加载更多 ⬇️</div>
+    </div>
+
+    <div class="footer">
+        © 2026 我的影视 
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script type="module">
+        import { AuthAPI, MovieAPI } from './js/api.js';
+
+        // ====== 分页状态 ======
+        let currentPage = 1;
+        let allMovies = [];
+        let hasMore = true;
+        let isLoading = false;
+
+        // ====== 轮播 ======
+        let bannerIndex = 0;
+        const slides = document.querySelectorAll('.banner-slide');
+        const dots = document.querySelectorAll('.banner-dots span');
+        let bannerTimer;
+
+        function goToBanner(index) {
+            slides.forEach((s, i) => s.classList.toggle('active', i === index));
+            dots.forEach((d, i) => d.classList.toggle('active', i === index));
+            bannerIndex = index;
+        }
+
+        function nextBanner() { goToBanner((bannerIndex + 1) % slides.length); }
+        function startBannerAuto() { bannerTimer = setInterval(nextBanner, 4500); }
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                clearInterval(bannerTimer);
+                goToBanner(parseInt(dot.dataset.index));
+                startBannerAuto();
+            });
+        });
+        startBannerAuto();
+
+        // ====== 渲染卡片 ======
+        function renderCards(movies, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = movies.map((m) => `
+                <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
+                    <div class="poster-wrap">
+                        <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                        <div class="rating-badge">⭐ ${m.rating}</div>
+                        <div class="play-icon">▶</div>
+                    </div>
+                    <div class="info">
+                        <h3>${m.title}</h3>
+                        <div class="meta">
+                            <span>${m.year}</span>
+                            <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ====== 追加影片 ======
+        function appendMoviesToAllGrids(newMovies) {
+            const grids = ['recommendGrid', 'hotGrid', 'scifiGrid'];
+            grids.forEach(gridId => {
+                const container = document.getElementById(gridId);
+                if (!container) return;
+                const existingCards = container.querySelectorAll('.movie-card');
+                const existingIds = new Set();
+                existingCards.forEach(card => {
+                    const onclick = card.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/id=(\d+)/);
+                        if (match) existingIds.add(parseInt(match[1]));
+                    }
+                });
+                const toAdd = newMovies.filter(m => !existingIds.has(m.id));
+                if (toAdd.length === 0) return;
+                const html = toAdd.map((m) => `
+                    <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
+                        <div class="poster-wrap">
+                            <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                            <div class="rating-badge">⭐ ${m.rating}</div>
+                            <div class="play-icon">▶</div>
+                        </div>
+                        <div class="info">
+                            <h3>${m.title}</h3>
+                            <div class="meta">
+                                <span>${m.year}</span>
+                                <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // ====== 加载更多 ======
+        const loadMoreStatus = document.getElementById('loadMoreStatus');
+
+        async function loadMoreMovies() {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+            loadMoreStatus.textContent = '⏳ 加载中...';
+            loadMoreStatus.style.color = '#888';
+
+            try {
+                const result = await MovieAPI.getMovies('', currentPage + 1, 12);
+                if (result.success) {
+                    const newMovies = result.data.movies || [];
+                    if (newMovies.length === 0) {
+                        hasMore = false;
+                        loadMoreStatus.textContent = '— 已经到底了  —';
+                        loadMoreStatus.style.color = '#444';
+                    } else {
+                        currentPage++;
+                        allMovies = [...allMovies, ...newMovies];
+                        appendMoviesToAllGrids(newMovies);
+                        loadMoreStatus.textContent = `✅ 加载了 ${newMovies.length} 部，共 ${allMovies.length} 部`;
+                        loadMoreStatus.style.color = '#666';
+                        setTimeout(() => {
+                            if (hasMore) {
+                                loadMoreStatus.textContent = '向下滚动加载更多 ⬇️';
+                                loadMoreStatus.style.color = '#555';
+                            }
+                        }, 2000);
+                    }
+                } else {
+                    loadMoreStatus.textContent = '⚠️ 加载失败，请重试';
+                    loadMoreStatus.style.color = '#ff6b6b';
+                }
+            } catch (e) {
+                console.error('加载更多失败:', e);
+                loadMoreStatus.textContent = '⚠️ 网络错误，请重试';
+                loadMoreStatus.style.color = '#ff6b6b';
+            }
+            isLoading = false;
+        }
+
+        // ====== 滚动监听 ======
+        let scrollTimeout = null;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                const scrollY = window.scrollY;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                if (scrollY + windowHeight >= documentHeight - 200) {
+                    loadMoreMovies();
+                }
+            }, 100);
+        });
+
+        // ====== 加载首页 ======
+        async function loadHomePage() {
+            try {
+                const result = await MovieAPI.getMovies('', 1, 12);
+                if (result.success) {
+                    const movies = result.data.movies || [];
+                    allMovies = movies;
+                    hasMore = movies.length >= 12;
+
+                    // 推荐
+                    try {
+                        const recResult = await MovieAPI.getRecommendations();
+                        if (recResult.success && recResult.data.length > 0) {
+                            renderCards(recResult.data, 'recommendGrid');
+                        } else {
+                            renderCards(movies.slice(0, 6), 'recommendGrid');
+                        }
+                    } catch (e) {
+                        renderCards(movies.slice(0, 6), 'recommendGrid');
+                    }
+
+                    // 热播
+                    const sorted = [...movies].sort((a, b) => b.rating - a.rating);
+                    renderCards(sorted.slice(0, 6), 'hotGrid');
+
+                    // 科幻
+                    const scifi = movies.filter(m => m.genre && m.genre.includes('科幻')).slice(0, 6);
+                    renderCards(scifi.length > 0 ? scifi : movies.slice(6, 12), 'scifiGrid');
+
+                    if (hasMore) {
+                        loadMoreStatus.textContent = '向下滚动加载更多 ⬇️';
+                        loadMoreStatus.style.color = '#555';
+                    } else {
+                        loadMoreStatus.textContent = '— 已经到底了  —';
+                        loadMoreStatus.style.color = '#444';
+                    }
+                }
+            } catch (error) {
+                console.error('加载影片失败:', error);
+            }
+        }
+
+        // ====== 认证状态 ======
+        function renderAuthArea() {
+            const authArea = document.getElementById('authArea');
+            if (AuthAPI.isLoggedIn()) {
+                const username = localStorage.getItem('movie_username') || '用户';
+                authArea.innerHTML = `
+                    <span style="color:#aaa;margin-right:12px;font-size:14px;">👋 ${username}</span>
+                    <a href="user/profile.html" style="color:#ffd700;text-decoration:none;font-weight:600;font-size:14px;">个人中心</a>
+                `;
+            } else {
+                authArea.innerHTML = `
+                    <a href="auth/login.html" style="color:#aaa;text-decoration:none;margin-right:12px;font-size:14px;">登录</a>
+                    <a href="auth/register.html" style="padding:8px 22px;border-radius:24px;background:linear-gradient(135deg,#ffd700,#f5a623);color:#000;text-decoration:none;font-weight:700;font-size:14px;">注册</a>
+                `;
+            }
+        }
+
+        // ====== 导航 ======
+        // ====== 导航 ======
+        function initNavLinks() {
+            document.getElementById('hotLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'filter.html?type=hot';  // 改成 filter.html
+            });
+            document.getElementById('categoryLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = 'filter.html?type=all';  // 改成 filter.html
+            });
+            document.getElementById('favoritesLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (AuthAPI.isLoggedIn()) {
+                    window.location.href = 'user/profile.html';
+                } else {
+                    alert('请先登录查看收藏 ❤️');
+                    window.location.href = 'auth/login.html';
+                }
+            });
+        }
+
+        // ====== 搜索 ======
+        function initSearch() {
+            const homeSearch = document.getElementById('homeSearchInput');
+            if (homeSearch) {
+                homeSearch.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const keyword = encodeURIComponent(e.target.value.trim());
+                        window.location.href = `search.html?q=${keyword}`;
+                    }
+                });
+            }
+        }
+
+        // ====== 初始化 ======
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAuthArea();
+            loadHomePage();
+            initNavLinks();
+            initSearch();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>搜索 - 我的影视</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141414;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ffd700;
+            border-radius: 10px;
+        }
+
+        /* ====== 导航 ====== */
+        .search-nav {
+            display: flex;
+            align-items: center;
+            padding: 14px 60px;
+            background: rgba(10, 10, 10, 0.92);
+            backdrop-filter: blur(20px) saturate(1.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .search-nav .logo {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .search-nav .back-home {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+        }
+        .search-nav .back-home:hover {
+            color: #ffd700;
+            border-color: rgba(255, 215, 0, 0.2);
+        }
+        .search-nav .search-box-wrapper {
+            flex: 1;
+            max-width: 600px;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: 0.4s;
+        }
+        .search-nav .search-box-wrapper:focus-within {
+            border-color: #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.06);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .search-nav .search-box-wrapper input {
+            flex: 1;
+            padding: 12px 22px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 15px;
+            min-width: 0;
+        }
+        .search-nav .search-box-wrapper input::placeholder {
+            color: #555;
+        }
+        .search-nav .search-box-wrapper .search-icon {
+            padding: 0 18px 0 4px;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+            user-select: none;
+        }
+        .search-nav .search-box-wrapper .search-icon:hover {
+            color: #ffd700;
+        }
+        .search-nav .search-clear {
+            padding: 0 18px;
+            color: #666;
+            cursor: pointer;
+            display: none;
+            font-size: 16px;
+            transition: 0.3s;
+            user-select: none;
+        }
+        .search-nav .search-clear:hover {
+            color: #ff6b6b;
+        }
+        .search-nav .search-clear.show {
+            display: block;
+        }
+
+        /* ====== 统计 ====== */
+        .search-stats {
+            padding: 20px 60px 4px;
+            color: #666;
+            font-size: 14px;
+        }
+        .search-stats .highlight {
+            color: #ffd700;
+            font-weight: 700;
+        }
+        .search-stats .type-tag {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 12px;
+            background: rgba(255, 215, 0, 0.1);
+            color: #ffd700;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        /* ====== 结果 ====== */
+        .search-results {
+            padding: 20px 60px 40px;
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 22px;
+        }
+
+        .movie-card {
+            background: #141414;
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .movie-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.12);
+            border-color: rgba(255, 215, 0, 0.15);
+        }
+        .movie-card .poster-wrap {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 2/3;
+        }
+        .movie-card .poster-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+        .movie-card:hover .poster-wrap img {
+            transform: scale(1.05);
+        }
+        .movie-card .poster-wrap .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 215, 0, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #000;
+            transition: 0.3s;
+            opacity: 0;
+        }
+        .movie-card:hover .poster-wrap .play-icon {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .movie-card .poster-wrap .rating-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .movie-card .info {
+            padding: 14px 16px 16px;
+        }
+        .movie-card .info h3 {
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .movie-card .info .meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 13px;
+        }
+
+        /* ====== 空状态 ====== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px 40px;
+            grid-column: 1 / -1;
+        }
+        .empty-state .icon {
+            font-size: 72px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        .empty-state h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+            color: #888;
+        }
+        .empty-state p {
+            color: #555;
+            font-size: 15px;
+        }
+        .empty-state .hot-recommend {
+            margin-top: 40px;
+            text-align: left;
+        }
+        .empty-state .hot-recommend h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #aaa;
+        }
+        .empty-state .hot-recommend .movie-grid {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        /* ====== 响应式 ====== */
+        @media (max-width: 768px) {
+            .search-nav {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .search-nav .logo {
+                font-size: 18px;
+            }
+            .search-nav .search-box-wrapper {
+                order: 3;
+                flex-basis: 100%;
+                max-width: 100%;
+            }
+            .search-nav .search-box-wrapper input {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            .search-stats {
+                padding: 14px 16px 4px;
+                font-size: 13px;
+            }
+            .search-results {
+                padding: 12px 16px 30px;
+            }
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 14px;
+            }
+            .empty-state {
+                padding: 40px 16px 30px;
+            }
+            .empty-state .icon {
+                font-size: 48px;
+            }
+            .empty-state .hot-recommend .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 导航 ====== -->
+    <nav class="search-nav">
+        <a href="index.html" class="back-home">← 返回</a>
+        <span class="logo" onclick="location.href='index.html'">🎬 我的影视</span>
+        <div class="search-box-wrapper">
+            <input type="text" id="searchInput" placeholder="搜索影片名称、类型..." autofocus />
+            <span class="search-icon" id="searchIcon">🔍</span>
+            <span class="search-clear" id="clearBtn">✕</span>
+        </div>
+    </nav>
+
+    <!-- ====== 统计 ====== -->
+    <div class="search-stats" id="statsArea">
+        找到 <span class="highlight" id="resultCount">0</span> 部相关影片
+        <span class="type-tag" id="typeTag">全部</span>
+    </div>
+
+    <!-- ====== 结果 ====== -->
+    <div class="search-results">
+        <div class="movie-grid" id="resultGrid"></div>
+    </div>
+
+    <script src="data.js"></script>
+    <script type="module">
+        import { MovieAPI } from './js/api.js';
+
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultGrid = document.getElementById('resultGrid');
+        const resultCount = document.getElementById('resultCount');
+        const statsArea = document.getElementById('statsArea');
+        const typeTag = document.getElementById('typeTag');
+
+        // ====== 渲染 ======
+        function renderResults(movies, keyword = '') {
+            if (!movies || movies.length === 0) {
+                resultGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🔍</div>
+                        <h2>未找到相关影片</h2>
+                        <p>试试其他关键词，或者看看大家正在看什么</p>
+                        <div class="hot-recommend">
+                            <h3>🔥 热门推荐</h3>
+                            <div class="movie-grid" id="recommendGrid"></div>
+                        </div>
+                    </div>
+                `;
+                loadRecommendations();
+                statsArea.style.display = 'none';
+                return;
+            }
+
+            statsArea.style.display = 'block';
+            resultCount.textContent = movies.length;
+
+            resultGrid.innerHTML = movies.map((m) => `
+                <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
+                    <div class="poster-wrap">
+                        <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                        <div class="rating-badge">⭐ ${m.rating}</div>
+                        <div class="play-icon">▶</div>
+                    </div>
+                    <div class="info">
+                        <h3>${m.title}</h3>
+                        <div class="meta">
+                            <span>${m.year}</span>
+                            <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ====== 加载推荐 ======
+        async function loadRecommendations() {
+            try {
+                const result = await MovieAPI.getMovies('', 1, 4);
+                if (result.success) {
+                    const grid = document.getElementById('recommendGrid');
+                    if (grid) {
+                        grid.innerHTML = result.data.movies.map((m) => `
+                            <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
+                                <div class="poster-wrap">
+                                    <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                                    <div class="rating-badge">⭐ ${m.rating}</div>
+                                    <div class="play-icon">▶</div>
+                                </div>
+                                <div class="info">
+                                    <h3>${m.title}</h3>
+                                    <div class="meta">
+                                        <span>${m.year}</span>
+                                        <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.error('加载推荐失败:', e);
+            }
+        }
+
+        // ====== 搜索 ======
+        let searchTimer = null;
+        async function doSearch(keyword) {
+            const trimmed = keyword.trim();
+
+            if (!trimmed) {
+                clearBtn.classList.remove('show');
+                const result = await MovieAPI.getMovies('', 1, 30);
+                if (result.success) {
+                    renderResults(result.data.movies);
+                    typeTag.textContent = '全部';
+                }
+                return;
+            }
+
+            clearBtn.classList.add('show');
+            typeTag.textContent = `"${trimmed}"`;
+
+            try {
+                const result = await MovieAPI.getMovies(trimmed, 1, 30);
+                if (result.success) {
+                    renderResults(result.data.movies, trimmed);
+                } else {
+                    renderResults([]);
+                }
+            } catch (e) {
+                console.error('搜索失败:', e);
+                renderResults([]);
+            }
+        }
+
+        function clearSearch() {
+            searchInput.value = '';
+            clearBtn.classList.remove('show');
+            doSearch('');
+            searchInput.focus();
+        }
+
+        // ====== 事件 ======
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => doSearch(this.value), 250);
+        });
+
+        document.getElementById('searchIcon').addEventListener('click', () => doSearch(searchInput.value));
+
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault();
+                doSearch(this.value); }
+            if (e.key === 'Escape') { clearSearch(); }
+        });
+
+        clearBtn.addEventListener('click', clearSearch);
+
+        // ====== URL 参数 ======
+        // ====== 处理 URL 参数 ======
+        async function handleUrlParam() {
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            const type = params.get('type');
+            
+            // 处理分类/热榜跳转
+            if (type === 'hot') {
+                searchInput.placeholder = '🔥 热播榜单 (按热度排序)';
+                typeTag.textContent = '🔥 热播榜';
+                // 调用 API 时传入 sort=hot 参数
+                const result = await MovieAPI.getMovies('', 1, 30, 'hot');
+                if (result.success) {
+                    renderResults(result.data.movies);
+                    statsArea.style.display = 'block';
+                    resultCount.textContent = result.data.movies.length;
+                }
+                return;
+            }
+            
+            if (type === 'all') {
+                searchInput.placeholder = '📚 全部影片';
+                typeTag.textContent = '📚 全部';
+                const result = await MovieAPI.getMovies('', 1, 30, '');
+                if (result.success) {
+                    renderResults(result.data.movies);
+                    statsArea.style.display = 'block';
+                    resultCount.textContent = result.data.movies.length;
+                }
+                return;
+            }
+            
+            // 正常搜索
+            if (q) {
+                searchInput.value = decodeURIComponent(q);
+                await doSearch(searchInput.value);
+            } else {
+                const result = await MovieAPI.getMovies('', 1, 20, '');
+                if (result.success) {
+                    renderResults(result.data.movies);
+                }
+            }
+        }
+
+        handleUrlParam();
+    </script>
+</body>
+</html>

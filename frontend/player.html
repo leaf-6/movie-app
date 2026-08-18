@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎬 正在播放 - 我的影视</title>
+    <style>
+        /* ... 样式保持不变 ... */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+
+        .back-bar {
+            padding: 12px 40px;
+            background: rgba(10,10,10,0.92);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-bar .left { display: flex; align-items: center; gap: 16px; }
+        .back-bar .left a {
+            color: #888;
+            font-size: 14px;
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            transition: 0.3s;
+        }
+        .back-bar .left a:hover { color: #ffd700; border-color: rgba(255,215,0,0.2); }
+        .back-bar .title { font-size: 16px; font-weight: 600; color: #ddd; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .back-bar .auth-status { color: #888; font-size: 14px; }
+        .back-bar .auth-status a { color: #ffd700; text-decoration: none; }
+
+        .player-wrapper {
+            max-width: 1000px;
+            margin: 20px auto 0;
+            padding: 0 20px;
+            position: relative;
+        }
+        .player-wrapper video {
+            width: 100%;
+            border-radius: 16px;
+            background: #000;
+            display: block;
+            box-shadow: 0 8px 50px rgba(0,0,0,0.8);
+        }
+
+        #danmakuCanvas {
+            position: absolute;
+            top: 0;
+            left: 20px;
+            width: calc(100% - 40px);
+            height: 100%;
+            pointer-events: none;
+            border-radius: 16px;
+            z-index: 10;
+        }
+
+        .danmaku-controls {
+            max-width: 1000px;
+            margin: 10px auto 0;
+            padding: 0 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .danmaku-controls input {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px 16px;
+            border-radius: 24px;
+            border: 1px solid #2a2a2a;
+            background: #1a1a1a;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .danmaku-controls input:focus { border-color: #ffd700; }
+        .danmaku-controls input::placeholder { color: #555; }
+        .danmaku-controls .btn-danmaku {
+            padding: 8px 24px;
+            border-radius: 24px;
+            border: none;
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+        .danmaku-controls .btn-danmaku:hover { transform: scale(1.04); }
+        .danmaku-controls .btn-toggle {
+            padding: 8px 16px;
+            border-radius: 24px;
+            border: 1px solid #2a2a2a;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 13px;
+            min-width: 100px;
+        }
+        .danmaku-controls .btn-toggle:hover { border-color: #ffd700; color: #ffd700; }
+        .danmaku-controls .btn-toggle.active { border-color: #ffd700; color: #ffd700; background: rgba(255,215,0,0.06); }
+
+        .danmaku-list-toggle {
+            padding: 8px 16px;
+            border-radius: 24px;
+            border: 1px solid #2a2a2a;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+        .danmaku-list-toggle:hover { border-color: #ffd700; color: #ffd700; }
+
+        .danmaku-list-panel {
+            display: none;
+            max-width: 1000px;
+            margin: 10px auto 0;
+            padding: 0 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .danmaku-list-panel.active { display: block; }
+        .danmaku-list-panel .danmaku-item {
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 13px;
+            color: #aaa;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .danmaku-list-panel .danmaku-item .d-time { color: #555; font-size: 12px; min-width: 50px; }
+        .danmaku-list-panel .danmaku-item .d-user { color: #666; font-size: 12px; min-width: 40px; }
+        .danmaku-list-panel .danmaku-item .d-content { color: #ddd; }
+        .danmaku-list-panel::-webkit-scrollbar { width: 4px; }
+        .danmaku-list-panel::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+
+        .detail {
+            max-width: 1000px;
+            margin: 16px auto 0;
+            padding: 0 20px 40px;
+        }
+        .detail .top-row { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+        .detail h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .detail .tags { display: flex; flex-wrap: wrap; gap: 8px 14px; color: #888; font-size: 14px; margin-bottom: 10px; }
+        .detail .tags span { background: rgba(255,255,255,0.04); padding: 4px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); }
+        .detail .desc { color: #999; line-height: 1.8; font-size: 15px; max-width: 700px; margin-top: 4px; }
+
+        .rating-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+        .rating-section .stars { display: flex; gap: 4px; font-size: 32px; cursor: pointer; }
+        .rating-section .stars .star { color: #333; transition: 0.2s; user-select: none; }
+        .rating-section .stars .star.active { color: #ffd700; }
+        .rating-section .stars .star:hover { color: #ffd700; transform: scale(1.1); }
+        .rating-section .rating-info { color: #888; font-size: 14px; }
+        .rating-section .rating-info .avg { color: #ffd700; font-weight: 700; }
+        .rating-section .rating-info .count { color: #555; }
+
+        .btn-favorite {
+            padding: 8px 28px;
+            border-radius: 28px;
+            border: 1px solid rgba(255,215,0,0.3);
+            background: transparent;
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.4s;
+        }
+        .btn-favorite:hover { background: rgba(255,215,0,0.08); border-color: #ffd700; }
+        .btn-favorite.active { background: rgba(255,215,0,0.12); border-color: #ffd700; }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.88);
+            backdrop-filter: blur(20px);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 14px;
+            font-size: 14px;
+            z-index: 999;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: opacity 0.4s;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+
+        .resume-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px;
+            margin-bottom: 10px;
+            background: rgba(255,215,0,0.08);
+            border: 1px solid rgba(255,215,0,0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .resume-bar button {
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: none;
+            background: linear-gradient(135deg, #ffd700, #f5a623);
+            color: #000;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .resume-bar .close-btn {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .back-bar { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+            .back-bar .title { font-size: 13px; max-width: 120px; }
+            .player-wrapper { padding: 0 10px; margin-top: 10px; }
+            .danmaku-controls { padding: 0 10px; }
+            .danmaku-controls input { min-width: 100px; font-size: 13px; }
+            .detail { padding: 0 10px 30px; margin-top: 10px; }
+            .detail h1 { font-size: 20px; }
+            .rating-section .stars { font-size: 26px; }
+            .detail .top-row { flex-direction: column; align-items: stretch; }
+            .btn-favorite { text-align: center; }
+            #danmakuCanvas { left: 10px; width: calc(100% - 20px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 导航 ====== -->
+    <div class="back-bar">
+        <div class="left">
+            <a href="index.html">← 返回</a>
+            <span class="title" id="movieTitle">🎬 正在加载...</span>
+        </div>
+        <div class="auth-status" id="authStatus"></div>
+    </div>
+
+    <!-- ====== 播放器 ====== -->
+    <div class="player-wrapper" id="playerWrapper">
+        <video id="videoPlayer" controls autoplay>
+            <source src="" type="video/mp4" />
+            您的浏览器不支持视频播放。
+        </video>
+        <canvas id="danmakuCanvas"></canvas>
+    </div>
+
+    <!-- ====== 弹幕控制栏 ====== -->
+    <div class="danmaku-controls">
+        <input type="text" id="danmakuInput" placeholder="发送弹幕..." maxlength="200" />
+        <button class="btn-danmaku" id="sendDanmakuBtn">📨 发送</button>
+        <button class="btn-toggle active" id="toggleDanmakuBtn">💬 弹幕开</button>
+        <button class="danmaku-list-toggle" id="toggleDanmakuList">📋 列表</button>
+    </div>
+
+    <!-- ====== 弹幕列表 ====== -->
+    <div class="danmaku-list-panel" id="danmakuListPanel">
+        <div id="danmakuList"></div>
+    </div>
+
+    <!-- ====== 详情 ====== -->
+    <div class="detail">
+        <div class="top-row">
+            <div>
+                <h1 id="detailTitle">加载中...</h1>
+                <div class="tags" id="detailTags"></div>
+                <div class="rating-section">
+                    <div class="stars" id="starsContainer">
+                        <span class="star" data-value="1">☆</span>
+                        <span class="star" data-value="2">☆</span>
+                        <span class="star" data-value="3">☆</span>
+                        <span class="star" data-value="4">☆</span>
+                        <span class="star" data-value="5">☆</span>
+                    </div>
+                    <div class="rating-info">
+                        <span class="avg" id="avgRating">-</span>
+                        <span class="count" id="ratingCount">(0人评分)</span>
+                    </div>
+                </div>
+                <p class="desc" id="detailDesc"></p>
+            </div>
+            <button class="btn-favorite" id="favoriteBtn">☆ 收藏</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { AuthAPI, MovieAPI, UserAPI } from './js/api.js';
+
+        // ====== 获取影片 ID ======
+        const params = new URLSearchParams(window.location.search);
+        const movieId = parseInt(params.get('id')) || 1;
+
+        // ====== DOM 引用 ======
+        const videoPlayer = document.getElementById('videoPlayer');
+        const canvas = document.getElementById('danmakuCanvas');
+        const ctx = canvas.getContext('2d');
+        const danmakuInput = document.getElementById('danmakuInput');
+        const sendBtn = document.getElementById('sendDanmakuBtn');
+        const toggleBtn = document.getElementById('toggleDanmakuBtn');
+        const toggleListBtn = document.getElementById('toggleDanmakuList');
+        const danmakuListPanel = document.getElementById('danmakuListPanel');
+        const danmakuList = document.getElementById('danmakuList');
+
+        let currentMovie = null;
+        let danmakuEnabled = true;
+        let danmakuData = [];
+        let danmakuTracks = [];
+        let animationId = null;
+        let lastTime = -1;
+
+        // ====== 弹幕类 ======
+        class Danmaku {
+            constructor(text, time, color = '#ffffff', size = 'medium', username = '匿名') {
+                this.text = text;
+                this.time = time;
+                this.color = color;
+                this.size = size === 'large' ? 28 : size === 'small' ? 16 : 22;
+                this.username = username;
+                this.x = canvas.width;
+                this.y = 20 + Math.random() * (canvas.height - 50);
+                this.speed = 1.5 + Math.random() * 1.5;
+            }
+
+            update() {
+                this.x -= this.speed;
+                return this.x > -400;
+            }
+
+            draw(ctx) {
+                ctx.font = `${this.size}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 8;
+                ctx.fillStyle = this.color;
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // ====== 初始化画布 ======
+        function initCanvas() {
+            const rect = videoPlayer.getBoundingClientRect();
+            canvas.width = rect.width || 960;
+            canvas.height = rect.height || 540;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+        }
+
+        // ====== 弹幕渲染引擎 ======
+        function renderDanmaku(timestamp) {
+            if (!danmakuEnabled) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                animationId = requestAnimationFrame(renderDanmaku);
+                return;
+            }
+
+            const currentTime = videoPlayer.currentTime;
+
+            // 每秒检查一次是否有新的弹幕需要出现
+            if (Math.floor(currentTime) !== Math.floor(lastTime)) {
+                const newDanmaku = danmakuData.filter(d => {
+                    const timeDiff = Math.abs(d.time - currentTime);
+                    return timeDiff < 0.8 && !d._displayed;
+                });
+
+                newDanmaku.forEach(d => {
+                    const danmaku = new Danmaku(
+                        d.content,
+                        d.time,
+                        d.color || '#ffffff',
+                        d.size || 'medium',
+                        d.username || '匿名'
+                    );
+                    danmakuTracks.push(danmaku);
+                    d._displayed = true;
+                });
+
+                lastTime = currentTime;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            danmakuTracks = danmakuTracks.filter(d => d.update());
+            danmakuTracks.forEach(d => d.draw(ctx));
+
+            animationId = requestAnimationFrame(renderDanmaku);
+        }
+
+        // ====== 加载弹幕 ======
+        async function loadDanmaku() {
+            try {
+                const resp = await fetch(`http://localhost:5000/api/danmaku/${movieId}`);
+                const data = await resp.json();
+                if (data.success) {
+                    danmakuData = data.data || [];
+                    danmakuData.sort((a, b) => a.time - b.time);
+                    danmakuData.forEach(d => d._displayed = false);
+                    renderDanmakuList(danmakuData);
+                }
+            } catch (e) {
+                console.error('加载弹幕失败:', e);
+            }
+        }
+
+        function renderDanmakuList(data) {
+            if (!data || data.length === 0) {
+                danmakuList.innerHTML = '<div style="color:#555;padding:12px;text-align:center;font-size:13px;">还没有弹幕，来发第一条吧 ✨</div>';
+                return;
+            }
+            danmakuList.innerHTML = data.map(d => `
+                <div class="danmaku-item">
+                    <span class="d-time">${Math.floor(d.time / 60)}:${String(Math.floor(d.time % 60)).padStart(2, '0')}</span>
+                    <span class="d-user">${d.username || '匿名'}</span>
+                    <span class="d-content" style="color:${d.color || '#ddd'}">${d.content}</span>
+                </div>
+            `).join('');
+        }
+
+        // ====== 发送弹幕 ======
+
+        // 防止频繁发送弹幕
+        let lastSendTime = 0;
+
+        async function sendDanmaku() {
+            const now = Date.now();
+            if (now - lastSendTime < 2000) {
+                showToast('⏳ 发送太快了，稍等...', true);
+                return;
+            }
+            lastSendTime = now;
+
+            const content = danmakuInput.value.trim();
+            if (!content) {
+                showToast('请输入弹幕内容');
+                return;
+            }
+
+            const currentTime = videoPlayer.currentTime;
+
+            try {
+                const resp = await fetch('http://localhost:5000/api/danmaku', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('movie_token') || ''}`
+                    },
+                    body: JSON.stringify({
+                        movie_id: movieId,
+                        content: content,
+                        time: currentTime,
+                        color: '#ffffff',
+                        size: 'medium'
+                    })
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    const newDanmaku = {
+                        content: content,
+                        time: currentTime,
+                        color: '#ffffff',
+                        size: 'medium',
+                        username: localStorage.getItem('movie_username') || '匿名',
+                        _displayed: false
+                    };
+                    danmakuData.push(newDanmaku);
+                    danmakuData.sort((a, b) => a.time - b.time);
+                    danmakuInput.value = '';
+                    showToast('✅ 弹幕发送成功');
+                    renderDanmakuList(danmakuData);
+                } else {
+                    showToast(data.message || '发送失败', true);
+                }
+            } catch (e) {
+                console.error('发送弹幕失败:', e);
+                showToast('网络错误，请重试', true);
+            }
+        }
+
+        // ====== 评分功能 ======
+        let userRating = 0;
+        const stars = document.querySelectorAll('.star');
+
+        async function loadRating() {
+            try {
+                const resp = await fetch(`http://localhost:5000/api/movies/${movieId}/rating`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('movie_token') || ''}`
+                    }
+                });
+                const data = await resp.json();
+                if (data.success && data.data.rating > 0) {
+                    userRating = data.data.rating;
+                    updateStars(userRating);
+                }
+            } catch (e) {}
+
+            try {
+                const resp = await fetch(`http://localhost:5000/api/movies/${movieId}`);
+                const data = await resp.json();
+                if (data.success) {
+                    const m = data.data;
+                    document.getElementById('avgRating').textContent = m.avg_rating || m.rating || '-';
+                    document.getElementById('ratingCount').textContent = `(${m.rating_count || 0}人评分)`;
+                }
+            } catch (e) {}
+        }
+
+        function updateStars(rating) {
+            stars.forEach((star, index) => {
+                star.textContent = index < rating ? '★' : '☆';
+                star.classList.toggle('active', index < rating);
+            });
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('click', async function() {
+                if (!AuthAPI.isLoggedIn()) {
+                    showToast('请先登录再评分 ❤️');
+                    setTimeout(() => window.location.href = 'auth/login.html', 500);
+                    return;
+                }
+                const rating = parseInt(this.dataset.value);
+                userRating = rating;
+                updateStars(rating);
+                try {
+                    const resp = await fetch(`http://localhost:5000/api/movies/${movieId}/rating`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('movie_token') || ''}`
+                        },
+                        body: JSON.stringify({ rating })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        document.getElementById('avgRating').textContent = data.data.avg_rating;
+                        document.getElementById('ratingCount').textContent = `(${data.data.rating_count}人评分)`;
+                        showToast(`⭐ 评分 ${rating} 星成功！`);
+                    }
+                } catch (e) {
+                    showToast('评分失败，请重试', true);
+                }
+            });
+            star.addEventListener('mouseenter', function() {
+                const val = parseInt(this.dataset.value);
+                stars.forEach((s, i) => { s.textContent = i < val ? '★' : '☆'; });
+            });
+            star.addEventListener('mouseleave', function() {
+                updateStars(userRating);
+            });
+        });
+
+        // ====== Toast ======
+        function showToast(msg, isError = false) {
+            const old = document.querySelector('.toast-msg');
+            if (old) old.remove();
+            const div = document.createElement('div');
+            div.className = 'toast-msg';
+            div.textContent = msg;
+            if (isError) { div.style.borderColor = 'rgba(255,107,107,0.3)'; div.style.color = '#ff6b6b'; }
+            document.body.appendChild(div);
+            setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 300); }, 2500);
+        }
+
+        // ====== 弹幕开关 ======
+        toggleBtn.addEventListener('click', function() {
+            danmakuEnabled = !danmakuEnabled;
+            this.classList.toggle('active', danmakuEnabled);
+            this.textContent = danmakuEnabled ? '💬 弹幕开' : '💬 弹幕关';
+            if (!danmakuEnabled) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        });
+
+        toggleListBtn.addEventListener('click', function() {
+            danmakuListPanel.classList.toggle('active');
+            this.textContent = danmakuListPanel.classList.contains('active') ? '📋 关闭' : '📋 列表';
+        });
+
+        // ====== 事件绑定 ======
+        sendBtn.addEventListener('click', sendDanmaku);
+        danmakuInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendDanmaku(); });
+
+        // ====== 加载影片 ======
+        async function loadMovie() {
+            try {
+                const result = await MovieAPI.getMovieDetail(movieId);
+                if (!result.success) { document.getElementById('detailTitle').textContent = '影片不存在'; return; }
+
+                currentMovie = result.data;
+                const m = currentMovie;
+
+                document.getElementById('movieTitle').textContent = `🎬 ${m.title}`;
+                document.getElementById('detailTitle').textContent = m.title;
+                document.getElementById('detailDesc').textContent = m.description || '暂无简介';
+                document.getElementById('detailTags').innerHTML = `
+                    <span>📅 ${m.year || '2026'}</span>
+                    <span>🎭 ${m.genre || '未知'}</span>
+                    <span>⭐ ${m.rating || 'N/A'}</span>
+                `;
+
+                const videoUrl = m.video_url || 'https://www.w3schools.com/html/mov_bbb.mp4';
+                videoPlayer.querySelector('source').src = videoUrl;
+                videoPlayer.load();
+
+                updateAuthStatus();
+
+                await loadDanmaku();
+                await loadRating();
+
+                if (AuthAPI.isLoggedIn()) {
+                    try { await UserAPI.addHistory(movieId); } catch (e) {}
+                    await checkFavoriteStatus();
+                } else {
+                    document.getElementById('favoriteBtn').textContent = '☆ 登录后收藏';
+                    document.getElementById('favoriteBtn').style.opacity = '0.6';
+                }
+
+                videoPlayer.addEventListener('play', () => {
+                    if (!animationId) {
+                        initCanvas();
+                        animationId = requestAnimationFrame(renderDanmaku);
+                    }
+                });
+
+                videoPlayer.addEventListener('pause', () => {
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                        animationId = null;
+                    }
+                });
+
+                videoPlayer.addEventListener('seeked', () => {
+                    const currentTime = videoPlayer.currentTime;
+                    danmakuTracks = [];
+                    danmakuData.forEach(d => {
+                        d._displayed = d.time < currentTime;
+                    });
+                    lastTime = -1;
+                });
+
+                window.addEventListener('resize', initCanvas);
+
+                setupProgressRecovery();
+
+            } catch (error) {
+                console.error('加载失败:', error);
+                document.getElementById('detailTitle').textContent = '加载失败';
+            }
+        }
+
+        // ====== 进度记忆 ======
+        function getProgressKey(id) { return `movie_progress_${id}`; }
+        function getProgress(id) {
+            try {
+                const data = localStorage.getItem(getProgressKey(id));
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    if (Date.now() - parsed.updatedAt > 7 * 24 * 60 * 60 * 1000) {
+                        localStorage.removeItem(getProgressKey(id));
+                        return null;
+                    }
+                    return parsed.time;
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function setupProgressRecovery() {
+            const savedTime = getProgress(movieId);
+            if (savedTime && savedTime > 5) {
+                videoPlayer.addEventListener('canplay', function onCanPlay() {
+                    videoPlayer.removeEventListener('canplay', onCanPlay);
+                    const wrapper = document.getElementById('playerWrapper');
+                    const existing = document.querySelector('.resume-bar');
+                    if (existing) existing.remove();
+                    const bar = document.createElement('div');
+                    bar.className = 'resume-bar';
+                    const timeStr = Math.floor(savedTime / 60) + ':' + String(Math.floor(savedTime % 60)).padStart(2, '0');
+                    bar.innerHTML = `
+                        <span>⏱️ 上次看到 <strong>${timeStr}</strong></span>
+                        <div style="display:flex;gap:8px;">
+                            <button onclick="this.closest('.resume-bar').remove(); document.getElementById('videoPlayer').currentTime = ${savedTime}; document.getElementById('videoPlayer').play();">▶ 继续观看</button>
+                            <button class="close-btn" onclick="this.closest('.resume-bar').remove();">✕</button>
+                        </div>
+                    `;
+                    wrapper.prepend(bar);
+                });
+            } else if (savedTime && savedTime <= 5) {
+                videoPlayer.addEventListener('canplay', function onCanPlay() {
+                    videoPlayer.removeEventListener('canplay', onCanPlay);
+                    videoPlayer.currentTime = savedTime;
+                });
+            }
+
+            let saveTimer = null;
+            let lastSavedTime = 0;
+
+            videoPlayer.addEventListener('play', () => {
+                if (saveTimer) clearInterval(saveTimer);
+                saveTimer = setInterval(() => {
+                    const t = videoPlayer.currentTime;
+                    if (t > 5 && Math.abs(t - lastSavedTime) > 3) {
+                        localStorage.setItem(getProgressKey(movieId), JSON.stringify({ time: t, updatedAt: Date.now() }));
+                        lastSavedTime = t;
+                    }
+                }, 3000);
+            });
+
+            videoPlayer.addEventListener('pause', () => {
+                const t = videoPlayer.currentTime;
+                if (t > 5) { localStorage.setItem(getProgressKey(movieId), JSON.stringify({ time: t, updatedAt: Date.now() }));
+                    lastSavedTime = t; }
+            });
+
+            videoPlayer.addEventListener('ended', () => {
+                localStorage.removeItem(getProgressKey(movieId));
+                if (saveTimer) { clearInterval(saveTimer);
+                    saveTimer = null; }
+            });
+        }
+
+        // ====== 认证状态 ======
+        function updateAuthStatus() {
+            const authStatus = document.getElementById('authStatus');
+            if (AuthAPI.isLoggedIn()) {
+                const username = localStorage.getItem('movie_username') || '用户';
+                authStatus.textContent = `👋 ${username}`;
+            } else {
+                authStatus.innerHTML = `<a href="auth/login.html">登录</a>`;
+            }
+        }
+
+        // ====== 收藏 ======
+        const favoriteBtn = document.getElementById('favoriteBtn');
+
+        async function checkFavoriteStatus() {
+            if (!AuthAPI.isLoggedIn()) return;
+            try {
+                const result = await UserAPI.getFavorites();
+                if (result.success) {
+                    const favorited = result.data.some(m => m.id === movieId);
+                    updateFavoriteButton(favorited);
+                }
+            } catch (e) {}
+        }
+
+        function updateFavoriteButton(favorited) {
+            favoriteBtn.textContent = favorited ? '⭐ 已收藏' : '☆ 收藏';
+            favoriteBtn.classList.toggle('active', favorited);
+            favoriteBtn.style.opacity = '1';
+        }
+
+        window.toggleFavorite = async function() {
+            if (!AuthAPI.isLoggedIn()) {
+                showToast('请先登录 ❤️');
+                setTimeout(() => window.location.href = 'auth/login.html', 500);
+                return;
+            }
+            try {
+                const result = await UserAPI.toggleFavorite(movieId);
+                if (result.success) {
+                    updateFavoriteButton(result.data.favorited);
+                    showToast(result.data.favorited ? '✅ 已收藏' : '已取消收藏');
+                }
+            } catch (e) { showToast('操作失败', true); }
+        };
+        favoriteBtn.addEventListener('click', window.toggleFavorite);
+
+        // ====== 启动 ======
+        loadMovie();
+    </script>
+</body>
+</html>

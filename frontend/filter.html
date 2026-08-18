@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分类筛选 - 我的影视</title>
+    <style>
+        /* ... 样式和之前一样 ... */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #ffd700; border-radius: 10px; }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            padding: 14px 60px;
+            background: rgba(10,10,10,0.92);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .navbar .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+        }
+        .navbar .back-btn {
+            color: #888;
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+        .navbar .back-btn:hover { color: #ffd700; border-color: rgba(255,215,0,0.2); }
+
+        .filter-bar {
+            padding: 16px 60px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            background: rgba(10,10,10,0.6);
+        }
+        .filter-bar .label { color: #666; font-size: 12px; font-weight: 600; min-width: 32px; }
+        .filter-bar .filter-group { display: flex; flex-wrap: wrap; gap: 4px; }
+        .filter-bar .filter-btn,
+        .filter-bar .sort-btn {
+            padding: 4px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .filter-bar .filter-btn:hover,
+        .filter-bar .sort-btn:hover { border-color: rgba(255,215,0,0.2); color: #aaa; }
+        .filter-bar .filter-btn.active,
+        .filter-bar .sort-btn.active { background: rgba(255,215,0,0.1); border-color: #ffd700; color: #ffd700; }
+
+        .result-stats {
+            padding: 12px 60px;
+            color: #666;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .result-stats .highlight { color: #ffd700; font-weight: 600; }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 18px;
+            padding: 20px 60px 30px;
+        }
+        .movie-card {
+            background: #141414;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .movie-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(255,215,0,0.06);
+            border-color: rgba(255,215,0,0.1);
+        }
+        .movie-card .poster-wrap {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 2/3;
+        }
+        .movie-card .poster-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
+        .movie-card:hover .poster-wrap img { transform: scale(1.04); }
+        .movie-card .poster-wrap .rating-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+            padding: 3px 10px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        .movie-card .poster-wrap .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 44px;
+            height: 44px;
+            background: rgba(255,215,0,0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #000;
+            transition: 0.3s;
+            opacity: 0;
+        }
+        .movie-card:hover .poster-wrap .play-icon {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .movie-card .info { padding: 12px 14px 14px; }
+        .movie-card .info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+        .movie-card .info .meta { display: flex; justify-content: space-between; color: #555; font-size: 12px; }
+        .movie-card .info .play-count { color: #666; font-size: 11px; margin-top: 2px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #555;
+            grid-column: 1 / -1;
+        }
+        .empty-state .icon { font-size: 56px; margin-bottom: 12px; opacity: 0.4; }
+        .empty-state h2 { font-size: 20px; color: #666; }
+        .empty-state p { color: #444; margin-top: 6px; font-size: 14px; }
+
+        .load-more {
+            text-align: center;
+            padding: 12px 60px 40px;
+            color: #444;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 10px 14px; gap: 10px; }
+            .filter-bar { padding: 10px 14px; gap: 6px 10px; }
+            .filter-bar .filter-btn,
+            .filter-bar .sort-btn { font-size: 11px; padding: 3px 10px; }
+            .result-stats { padding: 8px 14px; font-size: 12px; }
+            .movie-grid { padding: 12px 14px 20px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+            .load-more { padding: 10px 14px 30px; }
+        }
+        /* ====== 骨架屏 ====== */
+        .skeleton {
+            background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 导航 -->
+    <nav class="navbar">
+        <a href="index.html" class="back-btn">← 返回</a>
+        <span class="logo" onclick="location.href='index.html'">🎬 我的影视</span>
+        <span style="color:#444;font-size:13px;margin-left:auto;" id="pageTitle">分类筛选</span>
+    </nav>
+
+    <!-- 筛选栏 -->
+    <div class="filter-bar" id="filterBar">
+        <!-- <span class="label"></span> -->
+        <div class="filter-group" id="genreGroup">
+            <button class="filter-btn active" data-value="">全部</button>
+            <button class="filter-btn" data-value="剧情">剧情</button>
+            <button class="filter-btn" data-value="科幻">科幻</button>
+            <button class="filter-btn" data-value="喜剧">喜剧</button>
+            <button class="filter-btn" data-value="动画">动画</button>
+            <button class="filter-btn" data-value="悬疑">悬疑</button>
+            <button class="filter-btn" data-value="动作">动作</button>
+            <button class="filter-btn" data-value="爱情">爱情</button>
+            <button class="filter-btn" data-value="冒险">冒险</button>
+            <button class="filter-btn" data-value="奇幻">奇幻</button>
+        </div>
+
+        <span class="label"></span>
+        <div class="filter-group" id="yearGroup">
+            <button class="filter-btn active" data-value="">全部</button>
+            <button class="filter-btn" data-value="2020">2020s</button>
+            <button class="filter-btn" data-value="2010">2010s</button>
+            <button class="filter-btn" data-value="2000">2000s</button>
+            <button class="filter-btn" data-value="1990">1990s</button>
+            <button class="filter-btn" data-value="1980">更早</button>
+        </div>
+
+        <span class="label"></span>
+        <div class="filter-group" id="sortGroup">
+            <button class="sort-btn" data-value="hot">🔥 热度</button>
+            <button class="sort-btn active" data-value="rating">⭐ 评分</button>
+            <button class="sort-btn" data-value="year"> 年份</button>
+            <button class="sort-btn" data-value="title"> 名称</button>
+        </div>
+    </div>
+
+    <!-- 结果统计 -->
+    <div class="result-stats">
+        找到 <span class="highlight" id="resultCount">0</span> 部影片
+    </div>
+
+    <!-- 影片网格 -->
+    <div class="movie-grid" id="movieGrid">
+        <div class="empty-state">
+            <div class="icon">🎬</div>
+            <h2>加载中...</h2>
+        </div>
+    </div>
+
+    <!-- 加载更多 -->
+    <div class="load-more" id="loadMore">
+        <span class="text">⬇️ 滚动加载更多</span>
+        <span class="loading" style="display:none;">⏳ 加载中...</span>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+
+        // ====== 解析 URL 参数 ======
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type');
+
+        // 设置页面标题
+        if (type === 'hot') {
+            document.getElementById('pageTitle').textContent = '🔥 热播榜';
+            document.querySelector('.result-stats .highlight').textContent = '🔥 热播榜';
+        } else if (type === 'all') {
+            document.getElementById('pageTitle').textContent = '📚 全部影片';
+            document.querySelector('.result-stats .highlight').textContent = '📚 全部影片';
+        }
+
+        // ====== DOM 引用 ======
+        const grid = document.getElementById('movieGrid');
+        const resultCount = document.getElementById('resultCount');
+        const loadMore = document.getElementById('loadMore');
+
+        // ====== 筛选状态 ======
+        const state = {
+            genre: '',
+            year: '',
+            sort: type === 'hot' ? 'hot' : 'rating',
+            sortOrder: 'DESC',
+            page: 1,
+            total: 0,
+            loading: false,
+            hasMore: true,
+            movies: []
+        };
+
+        // ====== 高亮对应的排序按钮 ======
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            if (btn.dataset.value === state.sort) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // ====== 筛选按钮点击 ======
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const group = this.closest('.filter-group');
+                group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const value = this.dataset.value;
+                const type = group.id === 'genreGroup' ? 'genre' : 'year';
+                state[type] = value;
+
+                state.page = 1;
+                state.movies = [];
+                state.hasMore = true;
+                loadMore.querySelector('.text').textContent = '⬇️ 滚动加载更多';
+                loadMore.querySelector('.loading').style.display = 'none';
+
+                loadMovies();
+            });
+        });
+
+        // ====== 排序按钮点击 ======
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                state.sort = this.dataset.value;
+                state.page = 1;
+                state.movies = [];
+                state.hasMore = true;
+                loadMore.querySelector('.text').textContent = '⬇️ 滚动加载更多';
+                loadMore.querySelector('.loading').style.display = 'none';
+
+                loadMovies();
+            });
+        });
+
+        // ====== 加载影片 ======
+        async function loadMovies() {
+            if (state.loading || !state.hasMore) return;
+            state.loading = true;
+            loadMore.querySelector('.loading').style.display = 'inline';
+            loadMore.querySelector('.text').textContent = '';
+
+            try {
+                const params = {
+                    genre: state.genre,
+                    sort: state.sort,
+                    sort_order: state.sortOrder,
+                    page: state.page,
+                    limit: 20
+                };
+
+                if (state.year) {
+                    if (state.year === '2020') { params.year_start = '2020'; }
+                    else if (state.year === '2010') { params.year_start = '2010'; params.year_end = '2019'; }
+                    else if (state.year === '2000') { params.year_start = '2000'; params.year_end = '2009'; }
+                    else if (state.year === '1990') { params.year_start = '1990'; params.year_end = '1999'; }
+                    else if (state.year === '1980') { params.year_end = '1989'; }
+                }
+
+                const resp = await fetch(`${API_BASE}/movies/filter`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+                const data = await resp.json();
+
+                if (data.success) {
+                    const movies = data.data.movies || [];
+                    state.total = data.data.total || 0;
+
+                    if (movies.length === 0 && state.movies.length === 0) {
+                        grid.innerHTML = `
+                            <div class="empty-state">
+                                <div class="icon">🔍</div>
+                                <h2>没有找到匹配的影片</h2>
+                                <p>试试调整筛选条件</p>
+                            </div>
+                        `;
+                        state.hasMore = false;
+                    } else if (movies.length === 0) {
+                        state.hasMore = false;
+                        loadMore.querySelector('.text').textContent = '— 已经到底了  —';
+                    } else {
+                        state.movies = [...state.movies, ...movies];
+                        renderMovies();
+                        state.page++;
+                        state.hasMore = movies.length >= 20;
+                        if (!state.hasMore) {
+                            loadMore.querySelector('.text').textContent = '— 已经到底了  —';
+                        } else {
+                            loadMore.querySelector('.text').textContent = '⬇️ 滚动加载更多';
+                        }
+                    }
+
+                    resultCount.textContent = state.total;
+                } else {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">⚠️</div>
+                            <h2>加载失败</h2>
+                            <p>请确保后端服务已启动 (python app.py)</p>
+                        </div>
+                    `;
+                }
+
+            } catch (e) {
+                console.error('加载失败:', e);
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <h2>网络错误</h2>
+                        <p>请确保后端服务已启动 (python app.py)</p>
+                    </div>
+                `;
+            }
+
+            state.loading = false;
+            loadMore.querySelector('.loading').style.display = 'none';
+        }
+
+        // ====== 渲染影片 ======
+        function renderMovies() {
+            if (state.movies.length === 0) return;
+
+            grid.innerHTML = state.movies.map((m) => `
+                <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
+                    <div class="poster-wrap">
+                        <img src="${m.poster || 'https://img2.doubanio.com/view/photo/s_ratio_poster/public/p2897488431.jpg'}" 
+                             alt="${m.title}" 
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                        <div class="rating-badge">⭐ ${m.rating}</div>
+                        <div class="play-icon">▶</div>
+                    </div>
+                    <div class="info">
+                        <h3>${m.title}</h3>
+                        <div class="meta">
+                            <span>${m.year}</span>
+                            <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+                        </div>
+                        ${m.play_count !== undefined ? `<div class="play-count">👁️ ${m.play_count || 0} 次播放</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ====== 滚动加载 ======
+        let scrollTimer = null;
+        window.addEventListener('scroll', () => {
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => {
+                const scrollY = window.scrollY;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+
+                if (scrollY + windowHeight >= documentHeight - 150) {
+                    loadMovies();
+                }
+            }, 150);
+        });
+
+        // ====== 初始化 ======
+        loadMovies();
+    </script>
+
+</body>
+</html>
