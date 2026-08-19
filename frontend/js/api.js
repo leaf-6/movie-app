@@ -1,27 +1,39 @@
-/**
- * api.js - 后端 API 调用封装
- * 所有后端请求统一走这里
- */
+// ==================== 最终版 api.js ====================
+// 自动判断环境：本地用 localhost，手机用局域网 IP
+// 你只需要把下面的 IP 换成你电脑的局域网 IP
 
-// 后端地址（根据实际情况修改）
-const API_BASE = 'http://localhost:5000/api';
+// ⚠️ 在这里填你电脑的局域网 IP（在终端输入 ipconfig 查看）
+const YOUR_LOCAL_IP = '192.168.10.37';
 
-// 获取存储的 Token
+// 自动判断：如果是手机访问，用 IP；如果是电脑访问，用 localhost
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+let API_BASE;
+if (isLocal) {
+    // 电脑本地访问：用 localhost
+    API_BASE = 'http://localhost:5000/api';
+} else if (isMobile) {
+    // 手机访问：用局域网 IP（确保手机和电脑在同一个 WiFi）
+    API_BASE = `http://${YOUR_LOCAL_IP}:5000/api`;
+} else {
+    // 其他情况（比如部署到 Netlify）：也用局域网 IP
+    API_BASE = `http://${YOUR_LOCAL_IP}:5000/api`;
+}
+
+// ==================== 以下代码保持不变 ====================
 function getToken() {
     return localStorage.getItem('movie_token');
 }
 
-// 保存 Token
 function setToken(token) {
     localStorage.setItem('movie_token', token);
 }
 
-// 清除 Token
 function clearToken() {
     localStorage.removeItem('movie_token');
 }
 
-// 通用请求函数
 async function request(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
     const headers = {
@@ -29,7 +41,6 @@ async function request(endpoint, options = {}) {
         ...options.headers
     };
 
-    // 如果有 Token，添加到请求头
     const token = getToken();
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -43,11 +54,9 @@ async function request(endpoint, options = {}) {
     try {
         const response = await fetch(url, config);
         const data = await response.json();
-        
-        // 如果返回 401 未授权，清除本地 Token
+
         if (response.status === 401) {
             clearToken();
-            // 如果当前页面不是登录/注册页，跳转登录
             const currentPage = window.location.pathname.split('/').pop();
             if (!['login.html', 'register.html'].includes(currentPage)) {
                 window.location.href = '../auth/login.html';
@@ -63,7 +72,6 @@ async function request(endpoint, options = {}) {
 
 // ==================== 认证相关 ====================
 export const AuthAPI = {
-    // 注册
     register(username, password) {
         return request('/auth/register', {
             method: 'POST',
@@ -71,7 +79,6 @@ export const AuthAPI = {
         });
     },
 
-    // 登录
     login(username, password) {
         return request('/auth/login', {
             method: 'POST',
@@ -79,25 +86,20 @@ export const AuthAPI = {
         });
     },
 
-    // 是否已登录（有 Token 就算已登录）
     isLoggedIn() {
         return !!getToken();
     },
 
-    // 获取当前用户信息（从 Token 解析，暂不实现完整解析）
     getCurrentUser() {
-        // 简单版：只返回是否登录，用户名需要从登录响应中保存
         const username = localStorage.getItem('movie_username');
         return username ? { username } : null;
     },
 
-    // 保存用户信息
     setUserInfo(username, token) {
         setToken(token);
         localStorage.setItem('movie_username', username);
     },
 
-    // 退出登录
     logout() {
         clearToken();
         localStorage.removeItem('movie_username');
@@ -106,9 +108,7 @@ export const AuthAPI = {
 };
 
 // ==================== 影片相关 ====================
-
 export const MovieAPI = {
-    // 获取影片列表（支持搜索、分页、排序）
     getMovies(keyword = '', page = 1, limit = 20, sort = '') {
         const params = new URLSearchParams({ page, limit });
         if (keyword) params.append('keyword', keyword);
@@ -116,25 +116,39 @@ export const MovieAPI = {
         return request(`/movies?${params.toString()}`);
     },
 
-    // 获取单部影片详情
     getMovieDetail(id) {
         return request(`/movies/${id}`);
     },
 
-    // 获取推荐影片
     getRecommendations() {
         return request('/movies/recommend');
+    },
+
+    filterMovies(params) {
+        return request('/movies/filter', {
+            method: 'POST',
+            body: JSON.stringify(params)
+        });
+    },
+
+    rateMovie(movieId, rating) {
+        return request(`/movies/${movieId}/rating`, {
+            method: 'POST',
+            body: JSON.stringify({ rating })
+        });
+    },
+
+    getUserRating(movieId) {
+        return request(`/movies/${movieId}/rating`);
     }
 };
 
 // ==================== 用户相关 ====================
 export const UserAPI = {
-    // 获取收藏列表
     getFavorites() {
         return request('/user/favorites');
     },
 
-    // 切换收藏状态（添加或取消）
     toggleFavorite(movieId) {
         return request('/user/favorites', {
             method: 'POST',
@@ -142,12 +156,10 @@ export const UserAPI = {
         });
     },
 
-    // 获取观看历史
     getHistory() {
         return request('/user/history');
     },
 
-    // 记录观看历史
     addHistory(movieId) {
         return request('/user/history', {
             method: 'POST',
@@ -155,3 +167,19 @@ export const UserAPI = {
         });
     }
 };
+
+// ==================== 弹幕相关 ====================
+export const DanmakuAPI = {
+    getDanmaku(movieId) {
+        return request(`/danmaku/${movieId}`);
+    },
+
+    sendDanmaku(movieId, content, time, color = '#ffffff', size = 'medium') {
+        return request('/danmaku', {
+            method: 'POST',
+            body: JSON.stringify({ movie_id: movieId, content, time, color, size })
+        });
+    }
+};
+
+console.log('✅ API 已就绪，当前后端地址:', API_BASE);

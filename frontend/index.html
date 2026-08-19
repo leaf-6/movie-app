@@ -170,6 +170,12 @@
         .banner-slide:nth-child(3) {
             background: linear-gradient(135deg, #0a1a2e 0%, #0d0d2a 100%);
         }
+        .banner-slide:nth-child(4) {
+            background: linear-gradient(135deg, #1a0a0a 0%, #2a0d0d 100%);
+        }
+        .banner-slide:nth-child(5) {
+            background: linear-gradient(135deg, #0a1a1a 0%, #0d2a2a 100%);
+        }
         .banner-content h1 {
             font-size: 44px;
             font-weight: 700;
@@ -328,6 +334,22 @@
             align-items: center;
             gap: 4px;
         }
+        .movie-card .poster-wrap .rank-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffd700;
+            z-index: 5;
+        }
+        .movie-card .poster-wrap .rank-badge.gold { color: #ffd700; }
+        .movie-card .poster-wrap .rank-badge.silver { color: #c0c0c0; }
+        .movie-card .poster-wrap .rank-badge.bronze { color: #cd7f32; }
         .movie-card .info {
             padding: 14px 16px 16px;
         }
@@ -344,6 +366,48 @@
             justify-content: space-between;
             color: #666;
             font-size: 13px;
+        }
+        .movie-card .info .play-count {
+            color: #666;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        /* ====== 各区域差异化样式 ====== */
+        #recommendGrid .movie-card {
+            border-color: rgba(255, 215, 0, 0.08);
+        }
+        #recommendGrid .movie-card:hover {
+            border-color: rgba(255, 215, 0, 0.3);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.15);
+        }
+        #scifiGrid .movie-card {
+            border-color: rgba(100, 50, 200, 0.1);
+        }
+        #scifiGrid .movie-card:hover {
+            border-color: rgba(100, 50, 200, 0.3);
+            box-shadow: 0 20px 50px rgba(100, 50, 200, 0.12);
+        }
+        #dramaGrid .movie-card {
+            border-color: rgba(50, 150, 255, 0.08);
+        }
+        #dramaGrid .movie-card:hover {
+            border-color: rgba(50, 150, 255, 0.25);
+            box-shadow: 0 20px 50px rgba(50, 150, 255, 0.1);
+        }
+        #animeGrid .movie-card {
+            border-color: rgba(255, 100, 200, 0.08);
+        }
+        #animeGrid .movie-card:hover {
+            border-color: rgba(255, 100, 200, 0.25);
+            box-shadow: 0 20px 50px rgba(255, 100, 200, 0.1);
+        }
+        #classicGrid .movie-card {
+            border-color: rgba(200, 180, 100, 0.08);
+        }
+        #classicGrid .movie-card:hover {
+            border-color: rgba(200, 180, 100, 0.25);
+            box-shadow: 0 20px 50px rgba(200, 180, 100, 0.1);
         }
 
         /* ====== 加载更多 ====== */
@@ -415,7 +479,6 @@
                 padding: 16px 16px 30px;
             }
         }
-        /* ====== 移动端全面适配 ====== */
         @media (max-width: 480px) {
             .navbar {
                 padding: 10px 12px;
@@ -466,7 +529,6 @@
             .banner-dots { bottom: 10px; gap: 6px; }
             .banner-dots span { width: 6px; height: 6px; }
             .banner-dots span.active { width: 16px; }
-
             .section { padding: 12px 10px 6px; }
             .section-header h2 { font-size: 16px; }
             .section-header .badge { font-size: 10px; padding: 1px 8px; }
@@ -491,13 +553,10 @@
             .movie-card .info { padding: 8px 10px 10px; }
             .movie-card .info h3 { font-size: 12px; }
             .movie-card .info .meta { font-size: 10px; }
-
             #loadMoreContainer { padding: 10px 10px 20px; }
             #loadMoreStatus { font-size: 12px; }
             .footer { font-size: 10px; padding: 12px 0 16px; }
         }
-
-        /* ====== 小屏手机（< 360px） ====== */
         @media (max-width: 360px) {
             .nav-links { gap: 6px; font-size: 11px; }
             .search-box { width: 60px; font-size: 11px; padding: 4px 10px; }
@@ -505,8 +564,7 @@
             .banner-wrapper { height: 120px; }
             .banner-content h1 { font-size: 15px; }
         }
-        
-        /* ====== 骨架屏 ====== */
+
         .skeleton {
             background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
             background-size: 200% 100%;
@@ -523,10 +581,9 @@
 
     <!-- ====== 导航栏 ====== -->
     <nav class="navbar">
-        <div class="logo" onclick="location.href='index.html'">🎬 我的影视 </div>
+        <div class="logo" onclick="location.href='index.html'">🎬 我的影视</div>
         <div class="nav-links">
             <a href="index.html" class="active">首页</a>
-            <!-- 改为 -->
             <a href="filter.html?type=hot" id="hotLink">热播榜</a>
             <a href="filter.html?type=all" id="categoryLink">分类</a>
             <a href="javascript:void(0)" id="favoritesLink">我的收藏</a>
@@ -560,14 +617,30 @@
                 <p>道姆·柯布是一位能潜入他人梦境的盗贼，为了回家必须完成最后一次任务...</p>
             </div>
         </div>
+        <div class="banner-slide" data-index="3" onclick="location.href='player.html?id=10'">
+            <div class="banner-content">
+                <span class="banner-tag"> 高分喜剧</span>
+                <h1>三傻大闹宝莱坞</h1>
+                <p>追求卓越，成功会不期而至。一部笑中带泪的印度神作...</p>
+            </div>
+        </div>
+        <div class="banner-slide" data-index="4" onclick="location.href='player.html?id=12'">
+            <div class="banner-content">
+                <span class="banner-tag">🔥 现象级神剧</span>
+                <h1>琅琊榜</h1>
+                <p>江左梅郎，麒麟才子。一卷风云琅琊榜，囊尽天下奇英才...</p>
+            </div>
+        </div>
         <div class="banner-dots" id="bannerDots">
             <span class="active" data-index="0"></span>
             <span data-index="1"></span>
             <span data-index="2"></span>
+            <span data-index="3"></span>
+            <span data-index="4"></span>
         </div>
     </div>
 
-    <!-- ====== 猜你喜欢 ====== -->
+    <!-- ====== 1. 猜你喜欢 ====== -->
     <section class="section">
         <div class="section-header">
             <h2> 猜你喜欢 <span class="badge">个性化推荐</span></h2>
@@ -576,22 +649,49 @@
         <div class="movie-grid" id="recommendGrid"></div>
     </section>
 
-    <!-- ====== 热播榜单 ====== -->
+    <!-- ====== 2. 热播榜 ====== -->
     <section class="section">
         <div class="section-header">
-            <h2> 实时热播榜 <span class="badge">🔥 热门</span></h2>
+            <h2>🔥 热播榜 <span class="badge">本周热门</span></h2>
             <span class="more" onclick="location.href='filter.html?type=hot'">更多 →</span>
         </div>
         <div class="movie-grid" id="hotGrid"></div>
     </section>
 
-    <!-- ====== 科幻精选 ====== -->
+    <!-- ====== 3. 豆瓣高分 ====== -->
     <section class="section">
         <div class="section-header">
-            <h2>科幻精选 <span class="badge"> 类型</span></h2>
+            <h2>⭐ 豆瓣高分 <span class="badge">9.0+ 必看</span></h2>
+            <span class="more" onclick="location.href='filter.html?type=all'">更多 →</span>
+        </div>
+        <div class="movie-grid" id="topRatedGrid"></div>
+    </section>
+
+    <!-- ====== 4. 科幻精选 ====== -->
+    <section class="section">
+        <div class="section-header">
+            <h2> 科幻精选 <span class="badge">想象力的边界</span></h2>
             <span class="more" onclick="location.href='filter.html?type=all'">更多 →</span>
         </div>
         <div class="movie-grid" id="scifiGrid"></div>
+    </section>
+
+    <!-- ====== 5. 经典老片 ====== -->
+    <section class="section">
+        <div class="section-header">
+            <h2> 经典老片 <span class="badge">时光沉淀</span></h2>
+            <span class="more" onclick="location.href='filter.html?type=all'">更多 →</span>
+        </div>
+        <div class="movie-grid" id="classicGrid"></div>
+    </section>
+
+    <!-- ====== 6. 高分剧集 ====== -->
+    <section class="section">
+        <div class="section-header">
+            <h2> 高分剧集 <span class="badge">国产神作</span></h2>
+            <span class="more" onclick="location.href='filter.html?type=all'">更多 →</span>
+        </div>
+        <div class="movie-grid" id="dramaGrid"></div>
     </section>
 
     <!-- ====== 加载更多 ====== -->
@@ -599,9 +699,7 @@
         <div id="loadMoreStatus">向下滚动加载更多 ⬇️</div>
     </div>
 
-    <div class="footer">
-        © 2026 我的影视 
-    </div>
+    <div class="footer">© 2026 我的影视 · 大数据实训项目</div>
 
     <script src="js/storage.js"></script>
     <script src="js/auth.js"></script>
@@ -628,6 +726,7 @@
 
         function nextBanner() { goToBanner((bannerIndex + 1) % slides.length); }
         function startBannerAuto() { bannerTimer = setInterval(nextBanner, 4500); }
+
         dots.forEach(dot => {
             dot.addEventListener('click', () => {
                 clearInterval(bannerTimer);
@@ -638,30 +737,46 @@
         startBannerAuto();
 
         // ====== 渲染卡片 ======
-        function renderCards(movies, containerId) {
+        function renderCards(movies, containerId, showRank = false) {
             const container = document.getElementById(containerId);
             if (!container) return;
-            container.innerHTML = movies.map((m) => `
-                <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
-                    <div class="poster-wrap">
-                        <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
-                        <div class="rating-badge">⭐ ${m.rating}</div>
-                        <div class="play-icon">▶</div>
-                    </div>
-                    <div class="info">
-                        <h3>${m.title}</h3>
-                        <div class="meta">
-                            <span>${m.year}</span>
-                            <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+
+            const rankClasses = ['gold', 'silver', 'bronze'];
+
+            container.innerHTML = movies.map((m, index) => {
+                let rankHtml = '';
+                if (showRank && index < 3) {
+                    rankHtml = `<div class="rank-badge ${rankClasses[index]}">#${index + 1}</div>`;
+                } else if (showRank) {
+                    rankHtml = `<div class="rank-badge">#${index + 1}</div>`;
+                }
+
+                return `
+                    <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
+                        <div class="poster-wrap">
+                            <img src="${m.poster || 'https://pic.umapi.cn/movie/default.jpg'}" 
+                                 alt="${m.title}" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                            <div class="rating-badge">⭐ ${m.rating}</div>
+                            ${rankHtml}
+                            <div class="play-icon">▶</div>
+                        </div>
+                        <div class="info">
+                            <h3>${m.title}</h3>
+                            <div class="meta">
+                                <span>${m.year}</span>
+                                <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
+                            </div>
+                            ${m.play_count !== undefined ? `<div class="play-count">👁️ ${m.play_count || 0} 次播放</div>` : ''}
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // ====== 追加影片 ======
         function appendMoviesToAllGrids(newMovies) {
-            const grids = ['recommendGrid', 'hotGrid', 'scifiGrid'];
+            const grids = ['recommendGrid', 'hotGrid', 'topRatedGrid', 'scifiGrid', 'classicGrid', 'dramaGrid'];
             grids.forEach(gridId => {
                 const container = document.getElementById(gridId);
                 if (!container) return;
@@ -679,7 +794,9 @@
                 const html = toAdd.map((m) => `
                     <div class="movie-card" onclick="location.href='player.html?id=${m.id}'">
                         <div class="poster-wrap">
-                            <img src="${m.poster}" alt="${m.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
+                            <img src="${m.poster || 'https://pic.umapi.cn/movie/default.jpg'}" 
+                                 alt="${m.title}" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22300%22%3E%3Crect fill=%22%23141414%22 width=%22200%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23444%22 font-size=%2240%22%3E🎬%3C/text%3E%3C/svg%3E'" />
                             <div class="rating-badge">⭐ ${m.rating}</div>
                             <div class="play-icon">▶</div>
                         </div>
@@ -689,6 +806,7 @@
                                 <span>${m.year}</span>
                                 <span>${m.genre ? m.genre.split('/')[0].trim() : '未知'}</span>
                             </div>
+                            ${m.play_count !== undefined ? `<div class="play-count">👁️ ${m.play_count || 0} 次播放</div>` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -702,7 +820,7 @@
         async function loadMoreMovies() {
             if (isLoading || !hasMore) return;
             isLoading = true;
-            loadMoreStatus.textContent = '⏳ 加载中...';
+            loadMoreStatus.textContent = ' 加载中...';
             loadMoreStatus.style.color = '#888';
 
             try {
@@ -755,31 +873,58 @@
         // ====== 加载首页 ======
         async function loadHomePage() {
             try {
-                const result = await MovieAPI.getMovies('', 1, 12);
+                const result = await MovieAPI.getMovies('', 1, 50);
                 if (result.success) {
                     const movies = result.data.movies || [];
                     allMovies = movies;
                     hasMore = movies.length >= 12;
 
-                    // 推荐
+                    // 1. 猜你喜欢（个性化推荐）
                     try {
                         const recResult = await MovieAPI.getRecommendations();
                         if (recResult.success && recResult.data.length > 0) {
                             renderCards(recResult.data, 'recommendGrid');
                         } else {
-                            renderCards(movies.slice(0, 6), 'recommendGrid');
+                            const sorted = [...movies].sort((a, b) => b.rating - a.rating);
+                            renderCards(sorted.slice(0, 6), 'recommendGrid');
                         }
                     } catch (e) {
-                        renderCards(movies.slice(0, 6), 'recommendGrid');
+                        const sorted = [...movies].sort((a, b) => b.rating - a.rating);
+                        renderCards(sorted.slice(0, 6), 'recommendGrid');
                     }
 
-                    // 热播
-                    const sorted = [...movies].sort((a, b) => b.rating - a.rating);
-                    renderCards(sorted.slice(0, 6), 'hotGrid');
+                    // 2. 热播榜（按评分排序，模拟热度）
+                    const hot = [...movies].sort((a, b) => {
+                        const aCount = a.play_count || 0;
+                        const bCount = b.play_count || 0;
+                        if (aCount !== bCount) return bCount - aCount;
+                        return b.rating - a.rating;
+                    });
+                    renderCards(hot.slice(0, 8), 'hotGrid', true);
 
-                    // 科幻
-                    const scifi = movies.filter(m => m.genre && m.genre.includes('科幻')).slice(0, 6);
-                    renderCards(scifi.length > 0 ? scifi : movies.slice(6, 12), 'scifiGrid');
+                    // 3. 豆瓣高分（评分 >= 9.0）
+                    const topRated = movies.filter(m => m.rating >= 9.0).sort((a, b) => b.rating - a.rating);
+                    renderCards(topRated.slice(0, 6), 'topRatedGrid');
+
+                    // 4. 科幻精选（严格筛选科幻类型）
+                    const scifi = movies.filter(m => {
+                        if (!m.genre) return false;
+                        const genres = m.genre.split('/').map(g => g.trim());
+                        return genres.includes('科幻') && !genres.includes('动画');
+                    });
+                    renderCards(scifi.length > 0 ? scifi.slice(0, 6) : movies.sort((a, b) => b.rating - a.rating).slice(0, 6), 'scifiGrid');
+
+                    // 5. 经典老片（2000年以前）
+                    const classic = movies.filter(m => parseInt(m.year) < 2000 && m.year).sort((a, b) => b.rating - a.rating);
+                    renderCards(classic.slice(0, 6), 'classicGrid');
+
+                    // 6. 高分剧集（类型包含"剧情"或"悬疑"，评分>=8.5）
+                    const drama = movies.filter(m => {
+                        if (!m.genre || !m.rating) return false;
+                        const genres = m.genre.split('/').map(g => g.trim());
+                        return (genres.includes('剧情') || genres.includes('悬疑') || genres.includes('古装')) && m.rating >= 8.5;
+                    }).sort((a, b) => b.rating - a.rating);
+                    renderCards(drama.slice(0, 6), 'dramaGrid');
 
                     if (hasMore) {
                         loadMoreStatus.textContent = '向下滚动加载更多 ⬇️';
@@ -812,15 +957,14 @@
         }
 
         // ====== 导航 ======
-        // ====== 导航 ======
         function initNavLinks() {
             document.getElementById('hotLink')?.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.location.href = 'filter.html?type=hot';  // 改成 filter.html
+                window.location.href = 'filter.html?type=hot';
             });
             document.getElementById('categoryLink')?.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.location.href = 'filter.html?type=all';  // 改成 filter.html
+                window.location.href = 'filter.html?type=all';
             });
             document.getElementById('favoritesLink')?.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -855,5 +999,6 @@
             initSearch();
         });
     </script>
+
 </body>
 </html>
